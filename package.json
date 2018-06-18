@@ -1,0 +1,74 @@
+{
+  "name": "spool-router",
+  "version": "1.0.0-alpha.1",
+  "description": "Spool - Router for Fabrix",
+  "scripts": {
+    "build": "tsc -p ./lib/tsconfig.release.json",
+    "lint": "tslint -p ./lib",
+    "watch": "tsc -w -p ./lib/tsconfig.release.json",
+    "test": "npm run clean && npm run lint && npm run build && nyc mocha",
+    "prepublishOnly": "npm run compile",
+    "compile": "npm run clean && npm run build",
+    "clean": "rm -rf dist"
+  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/config",
+    "dist/schemas"
+  ],
+  "pre-commit": [
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabrix-app/spool-router.git"
+  },
+  "keywords": [
+    "fabrix-app",
+    "fabrix",
+    "spool",
+    "router",
+    "hapi",
+    "microservices"
+  ],
+  "author": "Fabrix Team <hello@fabrix.app>",
+  "contributors": [
+    {
+      "name": "Scott Wyatt",
+      "email": "scottwyatt86@gmail.com",
+      "url": "https://github.com/scott-wyatt"
+    },
+    {
+      "name": "Travis Webb",
+      "url": "https://github.com/tjwebb"
+    }
+  ],
+  "dependencies": {
+    "joi": "^13",
+    "call": "^5",
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "@fabrix/fabrix": "^1.0.0-alpha.3",
+    "@fabrix/lint": "^1.0.0-alpha.3",
+    "@types/lodash": "^4.14.109",
+    "@types/node": "~10.3.2",
+    "hapi": "^16.4",
+    "mocha": "^5",
+    "nyc": "^12.0.2",
+    "smokesignals": "^3",
+    "tslib": "~1.9.0",
+    "tslint": "~5.10.0",
+    "tslint-microsoft-contrib": "~5.0.3",
+    "tsutils": "~2.27.1",
+    "typescript": "~2.8.1"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fabrix-app/spool-router/issues"
+  },
+  "homepage": "https://github.com/fabrix-app/spool-router#readme"
+}
