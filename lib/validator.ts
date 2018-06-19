@@ -1,5 +1,5 @@
 import * as joi from 'joi'
-import { Util } from './util'
+import { Utils } from './utils'
 import { routeSchema } from './schemas/route'
 
 export const Validator = {
@@ -23,7 +23,7 @@ export const Validator = {
    * Validate a route list
    */
   validateRouteList (routeList) {
-    return Util.findRouteConflicts(routeList)
+    return Utils.findRouteConflicts(routeList)
   }
 
 }

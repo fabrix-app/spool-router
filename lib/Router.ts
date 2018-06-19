@@ -1,5 +1,5 @@
 import { SystemSpool } from '@fabrix/fabrix/dist/common/spools/system'
-import { Util } from './util'
+import { Utils } from './utils'
 import { Validator } from './validator'
 
 import * as config from './config/index'
@@ -15,7 +15,7 @@ import * as pkg from '../package.json'
  * @see https://github.com/fabrix-app/spool-express
  * @see https://github.com/fabrix-app/spool-hapi
  */
-export class Router extends SystemSpool {
+export class RouterSpool extends SystemSpool {
 
   constructor (app) {
     super(app, {
@@ -40,7 +40,7 @@ export class Router extends SystemSpool {
    */
   async initialize () {
     this.app.routes = this.app.config.get('routes')
-      .map(route => Util.buildRoute(this.app, route))
+      .map(route => Utils.buildRoute(this.app, route))
       .filter(route => !!route)
   }
 }

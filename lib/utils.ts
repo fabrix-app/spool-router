@@ -3,7 +3,7 @@ import { get } from 'lodash'
 import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
 
-export const Util = {
+export const Utils = {
 
   /**
    * Build a complete route, with bound handler and attached preconditions

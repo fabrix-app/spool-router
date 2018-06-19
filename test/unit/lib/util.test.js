@@ -1,7 +1,7 @@
 const assert = require('assert')
 const lib = require('../../../dist')
 
-describe('lib.util', () => {
+describe('lib.utils', () => {
 
   describe('#findRouteConflicts', () => {
     const handler = function () { }
@@ -20,7 +20,7 @@ describe('lib.util', () => {
         }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routes)
+      const conflicts = lib.Utils.findRouteConflicts(routes)
 
       assert.equal(conflicts.length, 0)
     })
@@ -38,7 +38,7 @@ describe('lib.util', () => {
         }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routes)
+      const conflicts = lib.Utils.findRouteConflicts(routes)
 
       assert.equal(conflicts.length, 1)
     })
@@ -49,7 +49,7 @@ describe('lib.util', () => {
         { method: '*', path: '/c', handler: handler }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routeList)
+      const conflicts = lib.Utils.findRouteConflicts(routeList)
       assert.equal(conflicts.length, 0)
     })
     it('should return no errors for identical paths with different methods', () => {
@@ -59,7 +59,7 @@ describe('lib.util', () => {
         { method: '*', path: '/c', handler: handler }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routeList)
+      const conflicts = lib.Utils.findRouteConflicts(routeList)
       assert.equal(conflicts.length, 0)
     })
     it('should return errors for routes with identical paths and overlapping wildcard method', () => {
@@ -68,7 +68,7 @@ describe('lib.util', () => {
         { method: 'GET', path: '/a', handler: handler },
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routeList)
+      const conflicts = lib.Utils.findRouteConflicts(routeList)
       assert.equal(conflicts.length, 1)
     })
     it('should detect invalid route list (duplicate paths)', () => {
@@ -77,7 +77,7 @@ describe('lib.util', () => {
         { method: 'GET', path: '/a', handler: handler }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routeList)
+      const conflicts = lib.Utils.findRouteConflicts(routeList)
 
       assert.equal(conflicts.length, 1)
       assert.equal(conflicts[0].errors[0].message, 'New route /a conflicts with existing /a')
@@ -89,7 +89,7 @@ describe('lib.util', () => {
         { method: 'GET', path: '/a', handler: handler }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routeList)
+      const conflicts = lib.Utils.findRouteConflicts(routeList)
 
       assert.equal(conflicts.length, 2)
       assert.equal(conflicts[0].errors[0].message, 'New route /a conflicts with existing /a')
@@ -100,7 +100,7 @@ describe('lib.util', () => {
         { method: 'GET', path: '/a', handler: handler }
       ]
 
-      const conflicts = lib.Util.findRouteConflicts(routeList)
+      const conflicts = lib.Utils.findRouteConflicts(routeList)
       assert.equal(conflicts.length, 0)
     })
 
