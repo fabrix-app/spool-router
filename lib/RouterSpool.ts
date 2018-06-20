@@ -39,7 +39,7 @@ export class RouterSpool extends SystemSpool {
    * automatically merged into the application's config.routes list.
    */
   async initialize () {
-    this.app.routes = this.app.config.get('routes')
+    this.app.routes = (this.app.config.get('routes') || [])
       .map(route => Utils.buildRoute(this.app, route))
       .filter(route => !!route)
   }
