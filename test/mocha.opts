@@ -2,7 +2,8 @@
 --recursive
 --full-trace
 --no-exit
+--slow 50
 --check-leaks
---globals app,__core-js_shared__
+--globals app,__core-js_shared__,__coverage__
 
 test/unit/**/*.test.js test/integration/index.js test/integration/**/*.test.js
