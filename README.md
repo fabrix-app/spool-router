@@ -70,8 +70,8 @@ for more information.
 
 [npm-image]: https://img.shields.io/npm/v/spool-router.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/spool-router
-[ci-image]: https://img.shields.io/travis/fabrix-app/spool-router/master.svg?style=flat-square
-[ci-url]: https://travis-ci.org/fabrix-app/spool-router
+[ci-image]: https://img.shields.io/circleci/project/github/fabrix-app/spool-router/nmaster.svg
+[ci-url]: https://circleci.com/gh/fabrix-app/spool-router/tree/master
 [daviddm-image]: http://img.shields.io/david/fabrix-app/spool-router.svg?style=flat-square
 [daviddm-url]: https://david-dm.org/fabrix-app/spool-router
 [codeclimate-image]: https://img.shields.io/codeclimate/github/fabrix-app/spool-router.svg?style=flat-square
