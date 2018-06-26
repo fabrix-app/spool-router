@@ -76,7 +76,7 @@ for more information.
 
 [npm-image]: https://img.shields.io/npm/v/spool-router.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/spool-router
-[ci-image]: https://img.shields.io/circleci/project/github/fabrix-app/spool-router/nmaster.svg
+[ci-image]: https://img.shields.io/circleci/project/github/fabrix-app/spool-router/master.svg
 [ci-url]: https://circleci.com/gh/fabrix-app/spool-router/tree/master
 [daviddm-image]: http://img.shields.io/david/fabrix-app/spool-router.svg?style=flat-square
 [daviddm-url]: https://david-dm.org/fabrix-app/spool-router
