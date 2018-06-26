@@ -1,13 +1,19 @@
 # spool-router
 
+
 [![Gitter][gitter-image]][gitter-url]
 [![NPM version][npm-image]][npm-url]
-[![Build status][ci-image]][ci-url]
+[![Build Status][ci-image]][ci-url]
+[![Test Coverage][coverage-image]][coverage-url]
 [![Dependency Status][daviddm-image]][daviddm-url]
-[![Code Climate][codeclimate-image]][codeclimate-url]
 [![Follow @fabrix-app on Twitter][twitter-image]][twitter-url]
 
 Spool Router. Aggregates all routes from `config.routes` to create [hapi.js route objects](http://hapijs.com/api#route-configuration).
+
+## Install
+```sh
+$ npm install @fabrix/spool-router --save
+```
 
 ## Usage
 Load from your spool config. (This pack is included by default).
