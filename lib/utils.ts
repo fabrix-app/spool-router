@@ -33,10 +33,10 @@ export const Utils = {
    */
   getHandlerFromPrerequisite (app: FabrixApp, pre) {
     let handler
-    if (typeof pre === 'string') {
+    if (pre && typeof pre === 'string') {
       handler = get(app.policies, pre)
     }
-    else if (typeof pre.method === 'string') {
+    else if (pre && typeof pre.method === 'string') {
       handler = get(app.policies, pre.method)
     }
 

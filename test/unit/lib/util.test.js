@@ -107,16 +107,27 @@ describe('lib.utils', () => {
   })
 
   describe('#buildRoutes errors', () => {
-    const handler = function () {
-    }
+    it('should log an error if there is no handler and return undefined', () => {
+      const rawRoute = {
+        method: 'GET',
+        path: '/test/foo'
+      }
+      const route = lib.Utils.buildRoute(global.app, rawRoute)
+      assert.equal(route, undefined)
+      // getHandlerFromPrerequisite
+    })
+  })
+  describe('#getHandlerFromPrerequisite errors', () => {
+    it('should log an error if there is no pre and return undefined', () => {
+      const route = lib.Utils.getHandlerFromPrerequisite(global.app, null)
+      assert.equal(route, undefined)
+    })
+  })
 
-    it.skip('should log an error if there is no handler', () => {
-      const routes = [
-        {
-          method: 'GET',
-          path: '/test/foo'
-        }
-      ]
+  describe('#findRouteConflicts errors', () => {
+    it('should take a null value', () => {
+      const route = lib.Utils.findRouteConflicts()
+      assert.deepEqual(route, [])
     })
   })
 

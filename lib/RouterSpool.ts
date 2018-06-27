@@ -25,7 +25,7 @@ export class RouterSpool extends SystemSpool {
     })
   }
 
-  validate () {
+  async validate () {
     return Promise.all([
       Promise.all(this.app.config.get('routes').map(Validator.validateRoute)),
       Validator.validateRouteList(this.app.config.get('routes'))
