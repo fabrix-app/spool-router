@@ -1,6 +1,6 @@
 {
   "name": "@fabrix/spool-router",
-  "version": "1.0.0-alpha.7",
+  "version": "1.0.0-alpha.8",
   "description": "Spool - Router for Fabrix",
   "scripts": {
     "build": "tsc -p ./lib/tsconfig.release.json",

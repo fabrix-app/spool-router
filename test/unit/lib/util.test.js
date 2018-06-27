@@ -106,5 +106,19 @@ describe('lib.utils', () => {
 
   })
 
+  describe('#buildRoutes errors', () => {
+    const handler = function () {
+    }
+
+    it.skip('should log an error if there is no handler', () => {
+      const routes = [
+        {
+          method: 'GET',
+          path: '/test/foo'
+        }
+      ]
+    })
+  })
+
 })
 
