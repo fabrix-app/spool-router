@@ -131,5 +131,55 @@ describe('lib.utils', () => {
     })
   })
 
+  describe('#getPathFromRoute', () => {
+    const handler = function () { }
+
+    it('should use the router config prefix', () => {
+      const app = global.app
+      app.config.immutable = false
+      app.config.set('router.prefix', '/api/v1')
+
+      const route = {
+        method: 'POST',
+        path: '/a',
+        handler: handler
+      }
+      const path = lib.Utils.getPathFromRoute(global.app, route)
+      assert.equal(path, '/api/v1/a')
+    })
+    it('should use the route level config prefix', () => {
+      const app = global.app
+      app.config.immutable = false
+      app.config.set('router.prefix', '/api/v1')
+
+      const route = {
+        method: 'POST',
+        path: '/a',
+        handler: handler,
+        config: {
+          prefix: '/api/v2'
+        }
+      }
+      const path = lib.Utils.getPathFromRoute(global.app, route)
+      assert.equal(path, '/api/v2/a')
+    })
+    it('should ignore router config prefix and route level config prefix', () => {
+      const app = global.app
+      app.config.immutable = false
+      app.config.set('router.prefix', '/api/v1')
+
+      const route = {
+        method: 'POST',
+        path: '/a',
+        handler: handler,
+        config: {
+          prefix: false
+        }
+      }
+      const path = lib.Utils.getPathFromRoute(global.app, route)
+      assert.equal(path, '/a')
+    })
+  })
+
 })
 

@@ -11,6 +11,10 @@ export const routeSchema = joi.object().keys({
     joi.string(),
     joi.object()
   ),
+  prefix: joi.alternatives().try(
+    joi.boolean(),
+    joi.string()
+  ),
   vhost: joi.string(),
   cache: joi.object().keys({
     privacy: joi.string(),

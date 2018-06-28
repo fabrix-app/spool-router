@@ -14,6 +14,7 @@ export const Utils = {
     route.config.pre = route.config.pre || (route.config.pre = [ ])
 
     route.handler = this.getHandlerFromString(app, rawRoute.handler)
+    route.path = this.getPathFromRoute(app, route)
 
     route.config.pre = route.config.pre
       .map(pre => this.getHandlerFromPrerequisite(app, pre))
@@ -28,8 +29,21 @@ export const Utils = {
     return route
   },
 
+  getPathFromRoute (app: FabrixApp, route) {
+    if (!route || !(route instanceof Object)) {
+      throw new RangeError('Expected a route object')
+    }
+    const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
+    const ignorePrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix === false
+    const routeLevelPrefix = hasPrefix ? route.config.prefix.replace('$/', '') : null
+    const prefix = app.config.get('router.prefix') || ''.replace(/$\//, '')
+    const path = route.path.replace(/^\//, '')
+
+    return `${ ignorePrefix ? '' : routeLevelPrefix || prefix}/${ path }`
+  },
+
   /**
-   * Get handler method from a hapi prerequisite object/string
+   * Get handler method from a "hapi/hapi-like" prerequisite object/string
    */
   getHandlerFromPrerequisite (app: FabrixApp, pre) {
     let handler
