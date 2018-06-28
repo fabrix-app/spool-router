@@ -6,4 +6,4 @@
 --check-leaks
 --globals app,__core-js_shared__,__coverage__
 
-test/unit/**/*.test.js test/integration/index.js test/integration/**/*.test.js
+test/index.js test/**/*.test.js

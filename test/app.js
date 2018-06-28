@@ -26,13 +26,18 @@ module.exports = {
   config: {
     main: {
       spools: [
-        require('../../dist').RouterSpool // spool-router
+        require('../dist/index').RouterSpool // spool-router
       ]
     },
     routes: [
       {
         method: 'GET',
         path: '/test/foo',
+        handler: 'TestController.foo'
+      },
+      {
+        method: 'GET',
+        path: '/test/{foo}',
         handler: 'TestController.foo'
       },
       {

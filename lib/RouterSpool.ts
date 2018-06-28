@@ -16,6 +16,7 @@ import * as pkg from '../package.json'
  * @see https://github.com/fabrix-app/spool-hapi
  */
 export class RouterSpool extends SystemSpool {
+  private _routes = []
 
   constructor (app) {
     super(app, {
@@ -23,13 +24,38 @@ export class RouterSpool extends SystemSpool {
       pkg: pkg,
       api: { },
     })
+
+    this.extensions = {
+      routes : {
+        get: () => {
+          return this.routes
+        },
+        set: (newRoutes) => {
+          // throw new Error('routes can not be set through FabrixApp, check spool-router instead')
+          this._routes = newRoutes
+        },
+        enumerable: true,
+        configurable: true
+      }
+    }
+
+    return this
   }
 
   async validate () {
     return Promise.all([
       Promise.all(this.app.config.get('routes').map(Validator.validateRoute)),
-      Validator.validateRouteList(this.app.config.get('routes'))
+      Validator.validateRouteList(this.app.config.get('routes')),
+      Validator.validateRouter(this.app.config.get('router'))
     ])
+  }
+
+
+  /**
+   * Get's the routes from spool-router
+   */
+  get routes(): any[] {
+    return this._routes
   }
 
   /**
@@ -39,8 +65,10 @@ export class RouterSpool extends SystemSpool {
    * automatically merged into the application's config.routes list.
    */
   async initialize () {
-    this.app.routes = (this.app.config.get('routes') || [])
-      .map(route => Utils.buildRoute(this.app, route))
-      .filter(route => !!route)
+    const routes =  this.app.config.get('routes') || []
+    this._routes = routes
+        .map(route =>  Utils.buildRoute(this.app, route))
+        .filter(route => !!route)
+        .sort(Utils.createSpecificityComparator({ order: this.app.config.get('router.sortOrder') }))
   }
 }
