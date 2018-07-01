@@ -1,6 +1,6 @@
 {
   "name": "@fabrix/spool-router",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0",
   "description": "Spool - Router for Fabrix",
   "scripts": {
     "build": "tsc -p ./lib/tsconfig.release.json",
@@ -49,7 +49,7 @@
     "lodash": "^4.17.10"
   },
   "devDependencies": {
-    "@fabrix/fabrix": "^1.0.0-alpha.13",
+    "@fabrix/fabrix": "^1.0.1",
     "@fabrix/lint": "^1.0.0-alpha.3",
     "@types/lodash": "^4.14.109",
     "@types/node": "~10.3.4",
@@ -64,7 +64,7 @@
     "typescript": "~2.8.1"
   },
   "peerDependencies": {
-    "@fabrix/fabrix": "^1.0.0-alpha.13"
+    "@fabrix/fabrix": "^1.0.1"
   },
   "license": "MIT",
   "bugs": {
