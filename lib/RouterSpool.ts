@@ -43,12 +43,18 @@ export class RouterSpool extends SystemSpool {
   }
 
   async validate () {
+    if (!this.app.config.get('router')) {
+      this.app.log.warn('Missing config.router, a default empty configuration will be used')
+    }
+    if (!this.app.config.get('routes')) {
+      this.app.log.warn('Missing config.routes, a default empty Array will be used')
+    }
     return Promise.all([
       Validator.validateRouter(this.app.config.get('router')),
       Promise.all(
-        this.app.config.get('routes').map(Validator.validateRoute)
+        Object.values(this.app.config.get('routes') || []).map(Validator.validateRoute)
       ),
-      Validator.validateRouteList(this.app.config.get('routes'))
+      Validator.validateRouteList(Object.values(this.app.config.get('routes') || []))
     ])
   }
 
@@ -67,9 +73,9 @@ export class RouterSpool extends SystemSpool {
    * automatically merged into the application's config.routes list.
    */
   async initialize () {
-    const routes =  this.app.config.get('routes') || []
+    const routes =  Object.values(this.app.config.get('routes') || [])
     this._routes = routes
-        .map(route =>  Utils.buildRoute(this.app, route))
+        .map((route: {[key: string]: any}) =>  Utils.buildRoute(this.app, route))
         .filter(route => !!route)
         .sort(Utils.createSpecificityComparator({ order: this.app.config.get('router.sortOrder') }))
   }
