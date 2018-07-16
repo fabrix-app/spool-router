@@ -79,4 +79,10 @@ export class RouterSpool extends SystemSpool {
         .filter(route => !!route)
         .sort(Utils.createSpecificityComparator({ order: this.app.config.get('router.sortOrder') }))
   }
+
+  sanity () {
+    if (!Array.isArray(this.app.routes)) {
+      throw new Error('Sanity Failed: app.routes is not an array!')
+    }
+  }
 }
