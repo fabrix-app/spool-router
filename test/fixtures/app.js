@@ -26,7 +26,9 @@ module.exports = {
   config: {
     main: {
       spools: [
-        require('../dist/index').RouterSpool // spool-router
+        require('./testspool'),
+        require('./testspool2'),
+        require('../../dist/index').RouterSpool, // spool-router
       ]
     },
     routes: [

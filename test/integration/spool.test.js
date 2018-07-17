@@ -4,7 +4,7 @@ const _ = require('lodash')
 describe('Router Spool', () => {
 
   describe('#initialize', () => {
-    it('should set app.routes', () => {
+    it('should have set app.routes', () => {
       const routes = global.app.routes
       assert(_.isArray(routes))
       console.log(routes)
@@ -15,6 +15,21 @@ describe('Router Spool', () => {
       // assert(_.isFunction(routes[1].handler))
       // assert(_.isFunction(routes[2].handler))
       // assert(_.isPlainObject(routes[3].handler))
+      // const spoolRoute1 = routes.find(r => {
+      //   return (
+      //     r.path === '/test/foo1' &&
+      //     r.method === 'GET'
+      //   )
+      // })
+      // const spoolRoute2 = routes.find(r => {
+      //   return (
+      //     r.path === '/test/foo2' &&
+      //     r.method === 'GET'
+      //   )
+      // })
+
+      assert(spoolRoute1)
+      assert(spoolRoute2)
     })
   })
 

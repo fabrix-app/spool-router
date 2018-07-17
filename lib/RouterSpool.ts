@@ -74,6 +74,7 @@ export class RouterSpool extends SystemSpool {
    */
   async initialize () {
     const routes =  Object.values(this.app.config.get('routes') || [])
+    console.log('BROKE', routes)
     this._routes = routes
         .map((route: {[key: string]: any}) =>  Utils.buildRoute(this.app, route))
         .filter(route => !!route)

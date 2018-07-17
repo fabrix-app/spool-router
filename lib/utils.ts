@@ -29,17 +29,29 @@ export const Utils = {
     return route
   },
 
+  getPrefix (app: FabrixApp, route): string {
+    if (!route || !(route instanceof Object)) {
+      throw new RangeError('Expected a route object')
+    }
+
+    const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
+    const ignorePrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix === false
+    const routeLevelPrefix = hasPrefix ? route.config.prefix.replace('$/', '') : null
+    const prefix = (app.config.get('router.prefix') || '').replace(/$\//, '')
+
+    return `${ ignorePrefix ? '' : routeLevelPrefix || prefix}`
+  },
+  /**
+   * Build the Path from the Route config
+   */
   getPathFromRoute (app: FabrixApp, route) {
     if (!route || !(route instanceof Object)) {
       throw new RangeError('Expected a route object')
     }
-    const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
-    const ignorePrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix === false
-    const routeLevelPrefix = hasPrefix ? route.config.prefix.replace('$/', '') : null
-    const prefix = app.config.get('router.prefix') || ''.replace(/$\//, '')
     const path = route.path.replace(/^\//, '')
+    const prefix = Utils.getPrefix(app, route)
 
-    return `${ ignorePrefix ? '' : routeLevelPrefix || prefix}/${ path }`
+    return `${ prefix }/${ path }`
   },
 
   /**
