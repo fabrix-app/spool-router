@@ -4,29 +4,43 @@ import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
 
 export const Utils = {
+  methods: [
+    'GET',
+    'HEAD',
+    'POST',
+    'PUT',
+    'DELETE',
+    'CONNECT',
+    'OPTIONS',
+    'TRACE',
+    'PATCH'
+  ],
 
   /**
    * Build a complete route, with bound handler and attached preconditions
    */
-  buildRoute (app: FabrixApp, rawRoute: IRoute) {
+  buildRoute (app: FabrixApp, path: string, rawRoute: IRoute) {
     const route = Object.assign({ }, rawRoute)
     route.config = route.config || (route.config = { })
     route.config.pre = route.config.pre || (route.config.pre = [ ])
 
-    route.handler = this.getHandlerFromString(app, rawRoute.handler)
-    route.path = this.getPathFromRoute(app, route)
+    path = Utils.getPathFromRoute(app, path, route)
+    // route.handler = Utils.getHandlerFromString(app, rawRoute.handler)
+    Utils.getHandlerFromString(app, route)
+
 
     route.config.pre = route.config.pre
       .map(pre => this.getHandlerFromPrerequisite(app, pre))
       .filter(handler => !!handler)
 
-    if (!route.handler) {
-      app.log.error('spool-router: route handler [', rawRoute.handler, ']',
-        'does not correspond to any defined Controller handler')
+    const routeHandlers = Object.keys(route)
 
+    if (!routeHandlers.some(v => Utils.methods.indexOf(v) >= 0)) {
+      app.log.error('spool-router: route handler [', routeHandlers.join(', '), ']',
+        'does not correspond to any defined Controller handler')
       return
     }
-    return route
+    return { path, route }
   },
 
   getPrefix (app: FabrixApp, route): string {
@@ -36,7 +50,7 @@ export const Utils = {
 
     const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
     const ignorePrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix === false
-    const routeLevelPrefix = hasPrefix ? route.config.prefix.replace('$/', '') : null
+    const routeLevelPrefix = hasPrefix ? app.config.get(route.config.prefix) || route.config.prefix.replace('$/', '') : null
     const prefix = (app.config.get('router.prefix') || '').replace(/$\//, '')
 
     return `${ ignorePrefix ? '' : routeLevelPrefix || prefix}`
@@ -44,11 +58,12 @@ export const Utils = {
   /**
    * Build the Path from the Route config
    */
-  getPathFromRoute (app: FabrixApp, route) {
+  getPathFromRoute (app: FabrixApp, path, route) {
     if (!route || !(route instanceof Object)) {
       throw new RangeError('Expected a route object')
     }
-    const path = route.path.replace(/^\//, '')
+
+    path = path.replace(/^\//, '')
     const prefix = Utils.getPrefix(app, route)
 
     return `${ prefix }/${ path }`
@@ -69,7 +84,6 @@ export const Utils = {
     if (!handler) {
       app.log.error('spool-router: route prerequisite [', pre, ']',
         'does not correspond to any defined Policy handler')
-
       return
     }
 
@@ -79,57 +93,43 @@ export const Utils = {
   /**
    * Get handler method from a controller.method string path
    */
-  getHandlerFromString (app: FabrixApp, rawHandler) {
-    if (typeof rawHandler === 'string') {
-      return get(app.controllers, rawHandler)
-    }
-    else {
-      return rawHandler
-    }
-  },
-
-  /**
-   * Return an error if the given route is not compatible with the router;
-   * return null otherwise.
-   */
-  getRouteConflict (router: Set<any>, route) {
-    let methods = [ route.method ]
-    if (route.method === '*') {
-      methods = [ 'GET', 'PUT', 'POST', 'DELETE', 'UPDATE' ]
-    }
-    if (Array.isArray(route.method)) {
-      methods = route.method
+  getHandlerFromString (app: FabrixApp, route) {
+    if (route['*']) {
+      Utils.methods.forEach(method => {
+        if (!route[method]) {
+          route[method] = route['*']
+        }
+      })
     }
 
-    return methods.map(method => {
-      try {
-        const r = Object.assign({ }, route)
-        router.add(Object.assign(r, { method }))
-        return null
-      }
-      catch (e) {
-        return e
+    Utils.methods.forEach(method => {
+      if (route[method]) {
+        if (typeof route[method] === 'string') {
+          return route[method] = get(app.controllers, route[method])
+        }
+        else {
+          return route[method]
+        }
       }
     })
-    .filter(err => !!err)
   },
 
-  /**
-   * Find conflicts within a particular route list which cannot be cleverly
-   * reconciled by the program logic, and which require corrective action from
-   * the developer.
-   */
-  findRouteConflicts (routeList = [ ]) {
-    const router = new Router()
-    const conflicts = routeList.map(route => {
-      return {
-        route: route,
-        errors: this.getRouteConflict(router, route)
-      }
+  buildRoutes(app: FabrixApp, routes, toReturn = {}) {
+    Object.keys(routes).forEach(r => {
+      const { path, route } = Utils.buildRoute(app, r, routes[r])
+      toReturn[path] = route
     })
-    return conflicts.filter(conflict => conflict.errors.length)
+    return Utils.sortRoutes(toReturn, app.config.get('router.sortOrder'))
   },
 
+  sortRoutes(routes, order) {
+    const toReturn = {}
+    const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({ order: order }))
+    sorted.forEach((r, i) => {
+      toReturn[r] = routes[r]
+    })
+    return toReturn
+  },
   /**
    * Sorts routes based free variables.
    */
@@ -146,8 +146,8 @@ export const Utils = {
     const catchAllRoute = options.catchAllRoute || '*'
 
     return function specificityComparator(routeA, routeB) {
-      routeA = (routeA.path || '').toLowerCase()
-      routeB = (routeB.path || '').toLowerCase()
+      routeA = (routeA || '').toLowerCase()
+      routeB = (routeB || '').toLowerCase()
       // If it's the default route, push it all the way
       // over to one of the ends
       if (
@@ -169,8 +169,8 @@ export const Utils = {
         // Otherwise, sort based on either depth or free variable priority
       }
       else {
-        const slicedA = routeA.split('/') // path.normalize('/' + routeA + '/').split('/').join('/')
-        const slicedB = routeB.split('/') // path.normalize('/' + routeB + '/').split('/').join('/')
+        const slicedA = routeA.split('/') // .normalize('/' + routeA + '/').split('/').join('/')
+        const slicedB = routeB.split('/') // .normalize('/' + routeB + '/').split('/').join('/')
         const joinedA = slicedA.join('')
         const joinedB = slicedB.join('')
         const depthA = Utils.optionalParts(slicedA)

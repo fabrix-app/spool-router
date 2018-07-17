@@ -35,11 +35,12 @@ export const Validator = {
     })
   },
 
-  /**
-   * Validate a route list
-   */
-  validateRouteList (routeList) {
-    return Utils.findRouteConflicts(routeList)
-  }
+  // LEGACY
+  // /**
+  //  * Validate a route list
+  //  */
+  // validateRouteList (routeList) {
+  //   return Utils.findRouteConflicts(routeList)
+  // }
 
 }

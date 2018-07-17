@@ -30,35 +30,96 @@ module.exports = {
 
 ## Configure
 
+#### `config.router`
+The Router takes a few Configuration values
+```js
+// config/router.ts
+export const router = {
+  sortOrder: 'asc', // (asc | desc)
+  prefix: '/api/v1'
+}
+```
+##### router.sortOrder
+This will sort the routes based on the key (path) either ascending or descending. This is used in spools like Express where the order of routes matters.
+
+##### router.prefix
+This config is optional and can be left as `''`.  This will prefix each route with the specified prefix.
+
 #### `config.routes`
 The list of route objects to be compiled for use by the webserver.
 
 ```js
-// config/routes.js
-module.exports = [
-  {
-    method: [ 'GET' ],
-    path: '/example/test',
-    handler: 'ExampleController.test'
+// config/routes.ts
+const routes = {
+  '/example/test': {
+    'GET': 'ExampleController.test'
   }
-]
+}
 ```
 
 During initialization, for the above example, a route object will be compiled
 that takes the following form:
 
 ```js
-  {
-    method: [ 'GET' ],
-    path: '/example/test',
-    handler: 'ExampleController.test',
+{
+  // ...
+  '/example/test': {
+    'GET': 'ExampleController.test',
     config: {
       pre: [ 'ExamplePolicy.test' ]
     }
   }
+  // ...
+}
 ```
 
-## tapestries and Policies
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': 'ExampleController.test',
+    config: {
+      prefix: '/api/v2'
+    }
+  }
+  // ...
+}
+```
+The Configuration above, will give this route a prefix of `/api/v2` instead of using the `config.prefix` that was specified 
+
+Optionally:
+
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': 'ExampleController.test',
+    config: {
+      prefix: false
+    }
+  }
+  // ...
+}
+```
+The Configuration about, will ignore any prefix given to it. 
+
+Optionally:
+
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': 'ExampleController.test',
+    config: {
+      prefix: 'customPrefixer.prefix'
+    }
+  }
+  // ...
+}
+```
+The configuration above will take the configuration of another config attribute, in this case: `app.config.customPrefixer.prefix` is set to `/custom/endpoint` so the resulting route prefix will be `/custom/endpoint/example/test`
+
+## Tapestries and Policies
 
 Support for tapestries and Policies is provided by [spool-tapestries](https://github.com/fabrix-app/spool-tapestries).
 
