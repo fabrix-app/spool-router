@@ -7,11 +7,11 @@ module.exports = class Testspool2 extends Spool {
         name: 'spool-test-2'
       },
       config: {
-        routes: [{
-          method: 'GET',
-          path: '/test/foo2',
-          handler: 'TestController.foo'
-        }]
+        routes: {
+          '/test/foo2': {
+            'GET': 'TestController.foo'
+          }
+        }
       },
       api: {}
     })

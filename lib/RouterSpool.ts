@@ -2,6 +2,8 @@ import { SystemSpool } from '@fabrix/fabrix/dist/common/spools/system'
 import { Utils } from './utils'
 import { Validator } from './validator'
 
+
+import { isObject } from 'lodash'
 import * as config from './config/index'
 import * as pkg from '../package.json'
 
@@ -16,7 +18,7 @@ import * as pkg from '../package.json'
  * @see https://github.com/fabrix-app/spool-hapi
  */
 export class RouterSpool extends SystemSpool {
-  private _routes = []
+  private _routes = {}
 
   constructor (app) {
     super(app, {
@@ -52,9 +54,8 @@ export class RouterSpool extends SystemSpool {
     return Promise.all([
       Validator.validateRouter(this.app.config.get('router')),
       Promise.all(
-        Object.values(this.app.config.get('routes') || []).map(Validator.validateRoute)
-      ),
-      Validator.validateRouteList(Object.values(this.app.config.get('routes') || []))
+        Object.values(this.app.config.get('routes') || {}).map(Validator.validateRoute)
+      )
     ])
   }
 
@@ -62,7 +63,7 @@ export class RouterSpool extends SystemSpool {
   /**
    * Get's the routes from spool-router
    */
-  get routes(): any[] {
+  get routes(): {[key: string]: any} {
     return this._routes
   }
 
@@ -73,16 +74,12 @@ export class RouterSpool extends SystemSpool {
    * automatically merged into the application's config.routes list.
    */
   async initialize () {
-    const routes =  Object.values(this.app.config.get('routes') || [])
-    console.log('BROKE', routes)
-    this._routes = routes
-        .map((route: {[key: string]: any}) =>  Utils.buildRoute(this.app, route))
-        .filter(route => !!route)
-        .sort(Utils.createSpecificityComparator({ order: this.app.config.get('router.sortOrder') }))
+    const routes =  this.app.config.get('routes') || {}
+    this._routes = Utils.buildRoutes(this.app, routes)
   }
 
   sanity () {
-    if (!Array.isArray(this.app.routes)) {
+    if (!isObject(this.app.routes)) {
       throw new Error('Sanity Failed: app.routes is not an array!')
     }
   }

@@ -31,49 +31,47 @@ module.exports = {
         require('../../dist/index').RouterSpool, // spool-router
       ]
     },
-    routes: [
-      {
-        method: 'GET',
-        path: '/test/foo',
-        handler: 'TestController.foo'
+    customPrefixer: {
+      prefix: '/prefix'
+    },
+    routes: {
+      '/test/foo': {
+        'GET': 'TestController.foo'
       },
-      {
-        method: 'GET',
-        path: '/test/{foo}',
-        handler: 'TestController.foo'
+      '/test/{foo}': {
+        'GET': 'TestController.foo'
       },
-      {
-        method: [ 'GET', 'POST' ],
-        path: '/',
-        handler: 'HomeController.index'
+      '/': {
+        'GET': 'HomeController.index',
+        'POST': 'HomeController.index'
       },
-      {
-        method: '*',
-        path: '/foo/bar',
-        handler: 'FooController.bar',
+      '/foo/bar': {
+        '*': 'FooController.bar',
         config: {
           pre: [
             'FooPolicy.bar'
           ]
         }
       },
-      {
-        method: 'GET',
-        path: '/node_modules',
-        handler: {
+      '/node_modules': {
+        'GET': {
           directory: {
             path: 'node_modules'
           }
         }
       },
-      {
-        method: 'GET',
-        path: '/test/foo/tags',
-        handler: 'TestController.foo',
+      '/test/foo/tags': {
+        'GET': 'TestController.foo',
         config: {
           tags: ['test', 'other']
         }
+      },
+      '/test/custom/prefix': {
+        'GET': 'TestController.foo',
+        config: {
+          prefix: 'customPrefixer.prefix'
+        }
       }
-    ]
+    }
   }
 }

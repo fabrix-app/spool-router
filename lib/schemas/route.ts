@@ -1,19 +1,60 @@
 import * as joi from 'joi'
 
 export const routeSchema = joi.object().keys({
-  method: joi.alternatives().try(
-    joi.string(),
-    joi.array()
-  ),
-  path: joi.string().required(),
-  handler: joi.alternatives().try(
+  // method: joi.alternatives().try(
+  //   joi.string(),
+  //   joi.array()
+  // ),
+  // path: joi.string().required(),
+  '*': joi.alternatives().try(
     joi.func(),
     joi.string(),
     joi.object()
   ),
-  prefix: joi.alternatives().try(
-    joi.boolean(),
-    joi.string()
+  GET: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  HEAD: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  POST: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  PUT: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  DELETE: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  CONNECT: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  OPTIONS: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  TRACE: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
+  ),
+  PATCH: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object()
   ),
   vhost: joi.string(),
   cache: joi.object().keys({
@@ -23,6 +64,13 @@ export const routeSchema = joi.object().keys({
     statuses: joi.array()
   }),
   config: joi.object().keys({
+    prefix: joi.alternatives().try(
+      joi.boolean(),
+      joi.string(),
+      joi.object().keys({
+
+      })
+    ),
     app: joi.object(),
     description: joi.string(),
     notes: joi.string(),
@@ -77,4 +125,4 @@ export const routeSchema = joi.object().keys({
     ),
     bind: joi.object()
   })
-})
+}).or('*', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH')
