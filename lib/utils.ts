@@ -25,20 +25,18 @@ export const Utils = {
     route.config.pre = route.config.pre || (route.config.pre = [ ])
 
     path = Utils.getPathFromRoute(app, path, route)
-    // route.handler = Utils.getHandlerFromString(app, rawRoute.handler)
     Utils.getHandlerFromString(app, route)
-
 
     route.config.pre = route.config.pre
       .map(pre => this.getHandlerFromPrerequisite(app, pre))
       .filter(handler => !!handler)
 
-    const routeHandlers = Object.keys(route)
+    const routeHandlers = Object.keys(route).filter(value => -1 !== Utils.methods.indexOf(value))
 
     if (!routeHandlers.some(v => Utils.methods.indexOf(v) >= 0)) {
-      app.log.error('spool-router: route handler [', routeHandlers.join(', '), ']',
+      app.log.error('spool-router: route ', path, ' handler [', routeHandlers.join(', '), ']',
         'does not correspond to any defined Controller handler')
-      return
+      return {}
     }
     return { path, route }
   },
