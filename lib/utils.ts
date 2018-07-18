@@ -28,19 +28,52 @@ export const Utils = {
     Utils.getHandlerFromString(app, route)
 
     route.config.pre = route.config.pre
-      .map(pre => this.getHandlerFromPrerequisite(app, pre))
+      .map(pre => Utils.getHandlerFromPrerequisite(app, pre))
       .filter(handler => !!handler)
 
     const routeHandlers = Object.keys(route).filter(value => -1 !== Utils.methods.indexOf(value))
 
-    if (!routeHandlers.some(v => Utils.methods.indexOf(v) >= 0)) {
+    if (!routeHandlers.some(v => Utils.methods.indexOf(v) >= 0 || !!route[v])) {
       app.log.error('spool-router: route ', path, ' handler [', routeHandlers.join(', '), ']',
         'does not correspond to any defined Controller handler')
       return {}
     }
+
+    routeHandlers.forEach(method => {
+      if (route[method]) {
+        route[method].config = route[method].config || route.config
+        route[method].config.pre = route[method].config.pre || route.config.pre
+        route[method].config.pre = route[method].config.pre
+          .map(pre => Utils.getHandlerFromPrerequisite(app, pre))
+          .filter(handler => !!handler)
+      }
+    })
+
     return { path, route }
   },
 
+  /**
+   * Expands the search for the prefix to the route or config.* level
+   */
+  getRouteLevelPrefix(app: FabrixApp, route) {
+    const configuredPrefix = app.config.get(route.config.prefix)
+    const routePrefix = route.config.prefix
+    if (typeof configuredPrefix !== 'undefined') {
+      if (configuredPrefix) {
+        return (configuredPrefix).replace(/$\//, '')
+      }
+      else {
+        return
+      }
+    }
+    else {
+      return (routePrefix || '').replace(/$\//, '')
+    }
+  },
+
+  /**
+   * Get's the prefix for a path
+   */
   getPrefix (app: FabrixApp, route): string {
     if (!route || !(route instanceof Object)) {
       throw new RangeError('Expected a route object')
@@ -48,11 +81,12 @@ export const Utils = {
 
     const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
     const ignorePrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix === false
-    const routeLevelPrefix = hasPrefix ? app.config.get(route.config.prefix) || route.config.prefix.replace('$/', '') : null
+    const routeLevelPrefix = hasPrefix ? Utils.getRouteLevelPrefix(app, route) : null
     const prefix = (app.config.get('router.prefix') || '').replace(/$\//, '')
 
     return `${ ignorePrefix ? '' : routeLevelPrefix || prefix}`
   },
+
   /**
    * Build the Path from the Route config
    */
@@ -67,16 +101,23 @@ export const Utils = {
     return `${ prefix }/${ path }`
   },
 
+  getPolicyFromString(app: FabrixApp, handler) {
+    return get(app.policies, handler)
+  },
+
   /**
    * Get handler method from a "hapi/hapi-like" prerequisite object/string
    */
   getHandlerFromPrerequisite (app: FabrixApp, pre) {
     let handler
     if (pre && typeof pre === 'string') {
-      handler = get(app.policies, pre)
+      handler = Utils.getPolicyFromString(app, pre)
     }
     else if (pre && typeof pre.method === 'string') {
-      handler = get(app.policies, pre.method)
+      handler = Utils.getPolicyFromString(app, pre.method)
+    }
+    else if (pre && typeof pre === 'function') {
+      handler = pre
     }
 
     if (!handler) {
@@ -86,6 +127,10 @@ export const Utils = {
     }
 
     return handler
+  },
+
+  getControllerFromString(app: FabrixApp, handler) {
+    return get(app.controllers, handler)
   },
 
   /**
@@ -103,7 +148,15 @@ export const Utils = {
     Utils.methods.forEach(method => {
       if (route[method]) {
         if (typeof route[method] === 'string') {
-          return route[method] = get(app.controllers, route[method])
+          return route[method] = { handler: Utils.getControllerFromString(app, route[method]) }
+        }
+        else if (route[method] instanceof Object && route[method].hasOwnProperty('handler')) {
+          if (typeof route[method].handler === 'string') {
+            return route[method].handler = Utils.getControllerFromString(app, route[method].handler)
+          }
+          else {
+            return route[method].handler
+          }
         }
         else {
           return route[method]
@@ -112,6 +165,9 @@ export const Utils = {
     })
   },
 
+  /**
+   * Build a route collection
+   */
   buildRoutes(app: FabrixApp, routes, toReturn = {}) {
     Object.keys(routes).forEach(r => {
       const { path, route } = Utils.buildRoute(app, r, routes[r])
@@ -120,6 +176,9 @@ export const Utils = {
     return Utils.sortRoutes(toReturn, app.config.get('router.sortOrder'))
   },
 
+  /**
+   * Sort a route collection by object key
+   */
   sortRoutes(routes, order) {
     const toReturn = {}
     const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({ order: order }))

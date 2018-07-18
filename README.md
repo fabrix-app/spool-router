@@ -64,15 +64,42 @@ that takes the following form:
 {
   // ...
   '/example/test': {
-    'GET': 'ExampleController.test',
-    config: {
-      pre: [ 'ExamplePolicy.test' ]
+    'GET': {
+      handler: 'ExampleController.test',
+      config: {
+        pre: [ ]
+      }
     }
   }
   // ...
 }
 ```
 
+You can also refine this by explicitly defining the handler and config:
+
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': {
+      handler: 'ExampleController.get',
+      config: {
+        pre: [ 'ExamplePolicy.get' ]
+      }
+    },
+    'POST': {
+      handler: 'ExampleController.post',
+      config: {
+        pre: [ 'ExamplePolicy.post' ]
+      }
+    }
+  }
+  // ...
+}
+```
+Which is useful for refining controller over different http methods on a route.
+
+##### Prefixes
 ```js
 {
   // ...
