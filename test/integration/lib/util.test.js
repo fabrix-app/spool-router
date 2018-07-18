@@ -16,7 +16,15 @@ describe('lib.Util', () => {
         '*': 'FooController.bar'
       })
 
-      assert.equal(route.GET, global.app.controllers.FooController.bar)
+      assert.equal(route.GET.handler, global.app.controllers.FooController.bar)
+    })
+    it('should resolve the route handler to the correct controller method', () => {
+      const {path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': {
+          handler: 'FooController.bar'
+        }
+      })
+      assert.equal(route.GET.handler, global.app.controllers.FooController.bar)
     })
     it('should resolve the prerequisite handler (string) to the correct policy method', () => {
       const {path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
@@ -43,6 +51,21 @@ describe('lib.Util', () => {
       })
 
       assert.equal(route.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
+    })
+    it('should resolve the prerequisite handler (string) to the correct policy method', () => {
+      const {path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        }
+      })
+
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
     })
   })
 
