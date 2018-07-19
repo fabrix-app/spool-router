@@ -34,6 +34,9 @@ module.exports = {
     customPrefixer: {
       prefix: '/prefix'
     },
+    router: {
+      debug: true
+    },
     routes: {
       '/test/foo': {
         'GET': 'TestController.foo'

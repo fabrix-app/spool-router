@@ -18,7 +18,7 @@ import * as pkg from '../package.json'
  * @see https://github.com/fabrix-app/spool-hapi
  */
 export class RouterSpool extends SystemSpool {
-  private _routes = {}
+  private _routes: Map<string, {[key: string]: any}> // = new Map
 
   constructor (app) {
     super(app, {
@@ -63,7 +63,7 @@ export class RouterSpool extends SystemSpool {
   /**
    * Get's the routes from spool-router
    */
-  get routes(): {[key: string]: any} {
+  get routes(): Map<string, {[key: string]: any}> {
     return this._routes
   }
 
