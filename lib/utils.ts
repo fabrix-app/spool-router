@@ -1,5 +1,5 @@
 import { FabrixApp } from '@fabrix/fabrix'
-import { get } from 'lodash'
+import { get, omit } from 'lodash'
 import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
 
@@ -20,34 +20,37 @@ export const Utils = {
    * Build a complete route, with bound handler and attached preconditions
    */
   buildRoute (app: FabrixApp, path: string, rawRoute: IRoute) {
-    const route = Object.assign({ }, rawRoute)
-    route.config = route.config || (route.config = { })
-    route.config.pre = route.config.pre || (route.config.pre = [ ])
+    const orgRoute = Object.assign({ }, rawRoute)
+    orgRoute._orgPath = path
+    orgRoute.config = orgRoute.config || (orgRoute.config = { })
+    orgRoute.config.pre = orgRoute.config.pre || (orgRoute.config.pre = [ ])
 
-    path = Utils.getPathFromRoute(app, path, route)
-    Utils.getHandlerFromString(app, route)
+    path = Utils.getPathFromRoute(app, path, orgRoute)
+    Utils.getHandlerFromString(app, orgRoute)
 
-    route.config.pre = route.config.pre
+    orgRoute.config.pre = orgRoute.config.pre
       .map(pre => Utils.getHandlerFromPrerequisite(app, pre))
       .filter(handler => !!handler)
 
-    const routeHandlers = Object.keys(route).filter(value => -1 !== Utils.methods.indexOf(value))
+    const orgRouteHandlers = Object.keys(orgRoute).filter(value => -1 !== Utils.methods.indexOf(value))
 
-    if (!routeHandlers.some(v => Utils.methods.indexOf(v) >= 0 || !!route[v])) {
-      app.log.error('spool-router: route ', path, ' handler [', routeHandlers.join(', '), ']',
+    if (!orgRouteHandlers.some(v => Utils.methods.indexOf(v) >= 0 || !!orgRoute[v])) {
+      app.log.error('spool-orgRouter: orgRoute ', path, ' handler [', orgRouteHandlers.join(', '), ']',
         'does not correspond to any defined Controller handler')
       return {}
     }
 
-    routeHandlers.forEach(method => {
-      if (route[method]) {
-        route[method].config = route[method].config || route.config
-        route[method].config.pre = route[method].config.pre || route.config.pre
-        route[method].config.pre = route[method].config.pre
+    orgRouteHandlers.forEach(method => {
+      if (orgRoute[method]) {
+        orgRoute[method].config = orgRoute[method].config || orgRoute.config
+        orgRoute[method].config.pre = orgRoute[method].config.pre || orgRoute.config.pre
+        orgRoute[method].config.pre = orgRoute[method].config.pre
           .map(pre => Utils.getHandlerFromPrerequisite(app, pre))
           .filter(handler => !!handler)
       }
     })
+
+    const route = omit(orgRoute, 'config')
 
     return { path, route }
   },

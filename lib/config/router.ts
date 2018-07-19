@@ -1,4 +1,4 @@
 export const router = {
-  prefix: '',
+  prefix: null,
   sortOrder: 'asc'
 }

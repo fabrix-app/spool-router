@@ -1,6 +1,7 @@
 const assert = require('assert')
 const lib = require('../../../dist')
 
+
 describe('lib.utils', () => {
   describe('#buildRoutes errors', () => {
     it('should log an error if there is no handler and return undefined', () => {
@@ -82,6 +83,5 @@ describe('lib.utils', () => {
       assert.equal(path, '/prefix/a')
     })
   })
-
 })
 

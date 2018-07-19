@@ -36,7 +36,15 @@ describe('lib.Util', () => {
         }
       })
 
-      assert.equal(route.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.HEAD.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.POST.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.PUT.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.DELETE.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.CONNECT.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.OPTIONS.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.TRACE.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.PATCH.config.pre[0], global.app.policies.FooPolicy.bar)
     })
     it('should resolve the prerequisite handler (object) to the correct policy method', () => {
       const { path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
@@ -49,8 +57,6 @@ describe('lib.Util', () => {
           ]
         }
       })
-
-      assert.equal(route.config.pre[0], global.app.policies.FooPolicy.bar)
       assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
     })
     it('should resolve the prerequisite handler (string) to the correct policy method', () => {

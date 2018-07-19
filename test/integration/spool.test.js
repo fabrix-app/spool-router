@@ -28,9 +28,9 @@ describe('Router Spool', () => {
     it('tags could be an array', () => {
       const routes = global.app.routes
       const route = routes['/test/foo/tags']
-      assert(_.isObject(route.config))
-      assert(_.isArray(route.config.tags))
-      assert(_.includes(route.config.tags, 'test', 'other'))
+      assert(_.isObject(route.GET.config))
+      assert(_.isArray(route.GET.config.tags))
+      assert(_.includes(route.GET.config.tags, 'test', 'other'))
     })
   })
 })
