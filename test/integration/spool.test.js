@@ -15,11 +15,11 @@ describe('Router Spool', () => {
       // assert(_.isFunction(routes[2].handler))
       // assert(_.isPlainObject(routes[3].handler))
 
-      assert(global.app.routes['/test/foo1'])
-      assert(global.app.routes['/test/foo2'])
-      assert(global.app.routes['/prefix/test/custom/prefix'])
+      assert(global.app.routes.get('/test/foo1'))
+      assert(global.app.routes.get('/test/foo2'))
+      assert(global.app.routes.get('/prefix/test/custom/prefix'))
 
-      assert.equal(Object.keys(global.app.routes).length, 9)
+      assert.equal(global.app.routes.size, 9)
     })
   })
 
@@ -27,7 +27,7 @@ describe('Router Spool', () => {
 
     it('tags could be an array', () => {
       const routes = global.app.routes
-      const route = routes['/test/foo/tags']
+      const route = routes.get('/test/foo/tags')
       assert(_.isObject(route.GET.config))
       assert(_.isArray(route.GET.config.tags))
       assert(_.includes(route.GET.config.tags, 'test', 'other'))

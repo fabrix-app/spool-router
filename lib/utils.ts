@@ -21,11 +21,19 @@ export const Utils = {
    */
   buildRoute (app: FabrixApp, path: string, rawRoute: IRoute) {
     const orgRoute = Object.assign({ }, rawRoute)
-    orgRoute._orgPath = path
     orgRoute.config = orgRoute.config || (orgRoute.config = { })
     orgRoute.config.pre = orgRoute.config.pre || (orgRoute.config.pre = [ ])
 
+    if (app.config.get('router.debug')) {
+      orgRoute._orgPath = path
+    }
+
     path = Utils.getPathFromRoute(app, path, orgRoute)
+
+    if (app.config.get('router.debug')) {
+      orgRoute._newPath = path
+    }
+
     Utils.getHandlerFromString(app, orgRoute)
 
     orgRoute.config.pre = orgRoute.config.pre
@@ -183,10 +191,10 @@ export const Utils = {
    * Sort a route collection by object key
    */
   sortRoutes(routes, order) {
-    const toReturn = {}
+    const toReturn = new Map
     const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({ order: order }))
     sorted.forEach((r, i) => {
-      toReturn[r] = routes[r]
+      toReturn.set(r, routes[r])
     })
     return toReturn
   },
@@ -215,19 +223,19 @@ export const Utils = {
         || routeA === catchAllRoute
       ) {
         return asc ? 1 : -1
-        // Also push index route down to end, but not past the default
       }
+      // Also push index route down to end, but not past the default
       else if (
         routeB === defaultRoute
         || routeB === catchAllRoute
       ) {
         return asc ? -1 : 1
-        // Also push index route down to end, but not past the default
       }
+      // Also push index route down to end, but not past the default
       else if (/^\/$/.test(routeA) && (routeB !== defaultRoute && routeB !== catchAllRoute)) {
         return asc ? 1 : -1
-        // Otherwise, sort based on either depth or free variable priority
       }
+      // Otherwise, sort based on either depth or free variable priority
       else {
         const slicedA = routeA.split('/') // .normalize('/' + routeA + '/').split('/').join('/')
         const slicedB = routeB.split('/') // .normalize('/' + routeB + '/').split('/').join('/')

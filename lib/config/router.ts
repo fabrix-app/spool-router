@@ -1,4 +1,5 @@
 export const router = {
   prefix: null,
-  sortOrder: 'asc'
+  sortOrder: 'asc',
+  debug: false
 }
