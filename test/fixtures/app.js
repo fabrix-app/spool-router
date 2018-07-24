@@ -29,6 +29,9 @@ module.exports = {
       },
       FooGetPolicy: class FooGetPolicy extends Policy {
         foo () { }
+      },
+      FooWildCardPolicy: class FooWildCardPolicy extends Policy {
+        foo () { }
       }
     }
   },
@@ -52,6 +55,9 @@ module.exports = {
         'GET': ['GetPolicy.foo']
       },
       'TestController': {
+        '*': {
+          '*': ['FooWildCardPolicy.foo']
+        },
         'foo': {
           'GET': ['FooGetPolicy.foo']
         }

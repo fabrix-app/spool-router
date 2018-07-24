@@ -129,11 +129,19 @@ export const Utils = {
    * Get a Controller's method's policies
    */
   getControllerPolicy(app: FabrixApp, handler, routeMethod, pre = [ ]) {
+    const controller = Utils.getControllerFromHandler(handler)
+
     if (app.config.get('policies.*.*')) {
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get('policies.*.*'))])]
     }
     if (app.config.get(`policies.*.${routeMethod}`)) {
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.*.${routeMethod}`))])]
+    }
+    if (handler && controller && app.config.get(`policies.${controller}.*.*`)) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.*.*`))])]
+    }
+    if (handler && controller && app.config.get(`policies.${controller}.*.${routeMethod}`)) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.*.${routeMethod}`))])]
     }
     if (handler && app.config.get(`policies.${handler}.${routeMethod}`)) {
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${handler}.${routeMethod}`))])]
@@ -170,6 +178,10 @@ export const Utils = {
 
   getControllerFromString(app: FabrixApp, handler) {
     return get(app.controllers, handler)
+  },
+
+  getControllerFromHandler(handler) {
+    return isString(handler) ? handler.split('.')[0] : handler
   },
 
   /**
@@ -220,20 +232,6 @@ export const Utils = {
       }
     })
   },
-
-  // /**
-  //  *
-  //  */
-  // getControllerPolicyFromString(app: FabrixApp, handlerString: string) {
-  //   let pre = []
-  //   if (app.config.get('policies.*')) {
-  //     pre.push(Utils.policyStringToArray(app.config.get('policies.*')))
-  //   }
-  //   if (app.config.get(`policies.${handlerString}`)) {
-  //     pre = [...pre, ...Utils.policyStringToArray(app.config.get(`policies.${handlerString}`))]
-  //   }
-  //   return { pre: pre }
-  // },
 
   /**
    * Build a route collection
