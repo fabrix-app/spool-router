@@ -74,5 +74,44 @@ describe('lib.Util', () => {
       assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
     })
   })
+  describe('#policies', () => {
+    it('should inherit the Global Policy on Every Method', () => {
+      const { path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': 'FooController.bar',
+        config: {
+          pre: [
+            {
+              method: 'FooPolicy.bar'
+            }
+          ]
+        }
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.GET.config.pre[1], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.HEAD.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.HEAD.config.pre[1], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.POST.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.POST.config.pre[1], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.PUT.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.PUT.config.pre[1], global.app.policies.GlobalPolicy.foo)
+    })
 
+    it('should inherit the global policy and the global GET policy', () => {
+      const { path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        'GET': 'FooController.bar'
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.GET.config.pre[1], global.app.policies.GetPolicy.foo)
+    })
+
+    it('should inherit the global policy and the global GET policy and the Controller Specific Get Policy', () => {
+      const { path, route} = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        'GET': 'TestController.foo'
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.GET.config.pre[1], global.app.policies.GetPolicy.foo)
+      assert.equal(route.GET.config.pre[2], global.app.policies.FooWildCardPolicy.foo)
+      assert.equal(route.GET.config.pre[3], global.app.policies.FooGetPolicy.foo)
+    })
+  })
 })

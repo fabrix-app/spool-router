@@ -1,5 +1,5 @@
 import { FabrixApp } from '@fabrix/fabrix'
-import { get, omit } from 'lodash'
+import { get, omit, isString } from 'lodash'
 import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
 
@@ -15,6 +15,13 @@ export const Utils = {
     'TRACE',
     'PATCH'
   ],
+
+  /**
+   *
+   */
+  stringToArray(strOrArray): string[] {
+    return isString(strOrArray) ? [ strOrArray ] : strOrArray
+  },
 
   /**
    * Build a complete route, with bound handler and attached preconditions
@@ -37,13 +44,14 @@ export const Utils = {
     Utils.getHandlerFromString(app, orgRoute)
 
     orgRoute.config.pre = orgRoute.config.pre
-      .map(pre => Utils.getHandlerFromPrerequisite(app, pre))
+      .map(pre => Utils.getPolicyFromPrerequisite(app, pre))
       .filter(handler => !!handler)
 
-    const orgRouteHandlers = Object.keys(orgRoute).filter(value => -1 !== Utils.methods.indexOf(value))
+    const orgRouteHandlers = Object.keys(orgRoute)
+      .filter(value => -1 !== Utils.methods.indexOf(value))
 
     if (!orgRouteHandlers.some(v => Utils.methods.indexOf(v) >= 0 || !!orgRoute[v])) {
-      app.log.error('spool-orgRouter: orgRoute ', path, ' handler [', orgRouteHandlers.join(', '), ']',
+      app.log.error('spool-router: route ', path, ' handler [', orgRouteHandlers.join(', '), ']',
         'does not correspond to any defined Controller handler')
       return {}
     }
@@ -53,7 +61,8 @@ export const Utils = {
         orgRoute[method].config = orgRoute[method].config || orgRoute.config
         orgRoute[method].config.pre = orgRoute[method].config.pre || orgRoute.config.pre
         orgRoute[method].config.pre = orgRoute[method].config.pre
-          .map(pre => Utils.getHandlerFromPrerequisite(app, pre))
+          .map(pre => Utils.getPolicyFromPrerequisite(app, pre))
+          // .map(pre => Utils.getPolicyFromPrerequisite(app, pre))
           .filter(handler => !!handler)
       }
     })
@@ -117,12 +126,39 @@ export const Utils = {
   },
 
   /**
+   * Get a Controller's method's policies
+   */
+  getControllerPolicy(app: FabrixApp, handler, routeMethod, pre = [ ]) {
+    const controller = Utils.getControllerFromHandler(handler)
+
+    if (app.config.get('policies.*.*')) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get('policies.*.*'))])]
+    }
+    if (app.config.get(`policies.*.${routeMethod}`)) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.*.${routeMethod}`))])]
+    }
+    if (handler && controller && app.config.get(`policies.${controller}.*.*`)) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.*.*`))])]
+    }
+    if (handler && controller && app.config.get(`policies.${controller}.*.${routeMethod}`)) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.*.${routeMethod}`))])]
+    }
+    if (handler && app.config.get(`policies.${handler}.${routeMethod}`)) {
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${handler}.${routeMethod}`))])]
+    }
+    return pre
+  },
+
+  /**
    * Get handler method from a "hapi/hapi-like" prerequisite object/string
    */
-  getHandlerFromPrerequisite (app: FabrixApp, pre) {
+  getPolicyFromPrerequisite (app: FabrixApp, pre) {
     let handler
     if (pre && typeof pre === 'string') {
       handler = Utils.getPolicyFromString(app, pre)
+    }
+    else if (pre && Array.isArray(pre)) {
+      handler = pre.map(p => Utils.getPolicyFromString(app, p)).filter(p => p)
     }
     else if (pre && typeof pre.method === 'string') {
       handler = Utils.getPolicyFromString(app, pre.method)
@@ -144,6 +180,10 @@ export const Utils = {
     return get(app.controllers, handler)
   },
 
+  getControllerFromHandler(handler) {
+    return isString(handler) ? handler.split('.')[0] : handler
+  },
+
   /**
    * Get handler method from a controller.method string path
    */
@@ -158,15 +198,32 @@ export const Utils = {
 
     Utils.methods.forEach(method => {
       if (route[method]) {
+        route.config = route.config || { }
+        route.config.pre = Utils.getControllerPolicy(app, null, method, route.config.pre)
+
         if (typeof route[method] === 'string') {
-          return route[method] = { handler: Utils.getControllerFromString(app, route[method]) }
+          route.config.pre = Utils.getControllerPolicy(app, route[method], method, route.config.pre)
+          return route[method] = {
+            handler: Utils.getControllerFromString(app, route[method]),
+            config: route.config
+          }
         }
         else if (route[method] instanceof Object && route[method].hasOwnProperty('handler')) {
+          route[method].config = route[method].config || route.config
+          route[method].config.pre = route[method].config.pre || route.config.pre
+
           if (typeof route[method].handler === 'string') {
-            return route[method].handler = Utils.getControllerFromString(app, route[method].handler)
+            route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, route.config.pre)
+            return route[method] = {
+              ...route[method],
+              handler: Utils.getControllerFromString(app, route[method].handler)
+            }
           }
           else {
-            return route[method].handler
+            return route[method] = {
+              ...route[method],
+              handler: route[method].handler
+            }
           }
         }
         else {

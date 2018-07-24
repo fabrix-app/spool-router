@@ -20,6 +20,18 @@ module.exports = {
     policies: {
       FooPolicy: class FooPolicy extends Policy {
         bar () { }
+      },
+      GlobalPolicy: class GlobalPolicy extends Policy {
+        foo () { }
+      },
+      GetPolicy: class GetPolicy extends Policy {
+        foo () { }
+      },
+      FooGetPolicy: class FooGetPolicy extends Policy {
+        foo () { }
+      },
+      FooWildCardPolicy: class FooWildCardPolicy extends Policy {
+        foo () { }
       }
     }
   },
@@ -36,6 +48,20 @@ module.exports = {
     },
     router: {
       debug: true
+    },
+    policies: {
+      '*': {
+        '*': ['GlobalPolicy.foo'],
+        'GET': ['GetPolicy.foo']
+      },
+      'TestController': {
+        '*': {
+          '*': ['FooWildCardPolicy.foo']
+        },
+        'foo': {
+          'GET': ['FooGetPolicy.foo']
+        }
+      }
     },
     routes: {
       '/test/foo': {

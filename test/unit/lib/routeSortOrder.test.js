@@ -195,4 +195,40 @@ describe('Utils Route Sort Order', () => {
       '/a'
     ])
   })
+
+  describe('# tough cases', () => {
+    it.skip('should sort the routes for free variables asc', () => {
+      let routes = {
+        '/a': {},
+        '/a/mars': {},
+        '/a/earth': {},
+        '/a/:world': {},
+        '/b/:world': {},
+        '/b/mars': {},
+        '/b/earth': {},
+        '/b': {}
+      }
+
+      routes = sort(routes, 'asc')
+      assert(routes)
+      const order = [
+        '/a',
+        '/a/earth',
+        '/a/mars',
+        '/a/:world',
+        '/b',
+        '/b/mars',
+        '/b/earth',
+        '/b/:world'
+      ]
+
+      let index = 0
+      // console.log('BROKE', routes)
+      routes.forEach((value, key) => {
+        // console.log('BROKE here', key)
+        assert.equal(key, order[index])
+        index++
+      })
+    })
+  })
 })
