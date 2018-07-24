@@ -55,6 +55,9 @@ export class RouterSpool extends SystemSpool {
       Validator.validateRouter(this.app.config.get('router')),
       Promise.all(
         Object.values(this.app.config.get('routes') || {}).map(Validator.validateRoute)
+      ),
+      Promise.all(
+        Object.values(this.app.config.get('policies') || {}).map(Validator.validatePolicy)
       )
     ])
   }
@@ -79,8 +82,8 @@ export class RouterSpool extends SystemSpool {
   }
 
   sanity () {
-    if (!isObject(this.app.routes)) {
-      throw new Error('Sanity Failed: app.routes is not an array!')
+    if (!(this.app.routes instanceof Map)) {
+      throw new Error('Sanity Failed: app.routes is not a Map!')
     }
   }
 }

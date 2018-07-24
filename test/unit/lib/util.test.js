@@ -10,12 +10,12 @@ describe('lib.utils', () => {
       }
       const {path, route} = lib.Utils.buildRoute(global.app, '/test/foo', rawRoute)
       assert.equal(route.GET, undefined)
-      // getHandlerFromPrerequisite
+      // getPolicyFromPrerequisite
     })
   })
-  describe('#getHandlerFromPrerequisite errors', () => {
+  describe('#getPolicyFromPrerequisite errors', () => {
     it('should log an error if there is no pre and return undefined', () => {
-      const handler = lib.Utils.getHandlerFromPrerequisite(global.app, {})
+      const handler = lib.Utils.getPolicyFromPrerequisite(global.app, {})
       assert.equal(handler, undefined)
     })
   })

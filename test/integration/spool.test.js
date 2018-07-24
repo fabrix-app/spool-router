@@ -7,7 +7,7 @@ describe('Router Spool', () => {
     it('should have set app.routes', () => {
       const routes = global.app.routes
       assert(_.isObject(routes))
-      console.log(routes)
+      // console.log(routes)
       // assert(Object.values(routes).some(r => _.isFunction(r.handler)))
       // assert(Object.values(routes).some(r => _.isPlainObject(r.handler)))
       // assert(_.isFunction(routes[0].handler))

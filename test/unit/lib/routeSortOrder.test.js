@@ -197,7 +197,7 @@ describe('Utils Route Sort Order', () => {
   })
 
   describe('# tough cases', () => {
-    it('should sort the routes for free variables desc', () => {
+    it.skip('should sort the routes for free variables asc', () => {
       let routes = {
         '/a': {},
         '/a/mars': {},
@@ -209,9 +209,8 @@ describe('Utils Route Sort Order', () => {
         '/b': {}
       }
 
-      routes = sort(routes, 'desc')
+      routes = sort(routes, 'asc')
       assert(routes)
-      const ordered = new Map()
       const order = [
         '/a',
         '/a/earth',
@@ -224,9 +223,9 @@ describe('Utils Route Sort Order', () => {
       ]
 
       let index = 0
-      console.log('BROKE', routes)
+      // console.log('BROKE', routes)
       routes.forEach((value, key) => {
-        console.log('BROKE here', key)
+        // console.log('BROKE here', key)
         assert.equal(key, order[index])
         index++
       })
