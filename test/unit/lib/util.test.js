@@ -1,87 +1,263 @@
 const assert = require('assert')
-const lib = require('../../../dist')
+const _ = require('lodash')
+const lib = require('../../../dist/index')
 
-
-describe('lib.utils', () => {
-  describe('#buildRoutes errors', () => {
-    it('should log an error if there is no handler and return undefined', () => {
-      const rawRoute = {
-        'GET': null
-      }
-      const {path, route} = lib.Utils.buildRoute(global.app, '/test/foo', rawRoute)
-      assert.equal(route.GET, undefined)
-      // getPolicyFromPrerequisite
+describe('lib.Util', () => {
+  describe('#splitRoute', () => {
+    it('Scenario 1', () => {
+      const [{path, route}] = lib.Utils.splitRoute(global.app, '/foo/bar', {
+        '*': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        config: {
+          prefix: '/test'
+        }
+      })
+      assert.equal(path, '/test2/foo/bar')
+    })
+    it('Scenario 2', () => {
+      const [{path, route}] = lib.Utils.splitRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        config: {
+          prefix: '/test'
+        }
+      })
+      // console.log('BROKE 2', splitRoutes)
+      assert.equal(path, '/test/foo/bar')
+    })
+    it('Scenario 3', () => {
+      const [{path, route}] = lib.Utils.splitRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        'POST': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        }
+      })
+      // console.log('BROKE 2', splitRoutes)
+      assert.equal(path, '/test2/foo/bar')
+    })
+    it('Scenario 4', () => {
+      const splitRoutes = lib.Utils.splitRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        'POST': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test3',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        }
+      })
+      assert.equal(splitRoutes.length, 2)
+      assert.equal(splitRoutes[0].path, '/test2/foo/bar')
+      assert.equal(splitRoutes[1].path, '/test3/foo/bar')
+    })
+    it('Scenario 4.5', () => {
+      const splitRoutes = lib.Utils.splitRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        'HEAD': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        'PUT': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test3',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        'POST': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test3',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        }
+      })
+      assert.equal(splitRoutes.length, 2)
+      assert.equal(splitRoutes[0].path, '/test2/foo/bar')
+      assert.equal(splitRoutes[1].path, '/test3/foo/bar')
+    })
+    it('Scenario 5', () => {
+      const [{path, route}] = lib.Utils.splitRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            prefix: '/test2',
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        },
+        config: {
+          prefix: '/test'
+        }
+      })
+      // console.log('BROKE 2', splitRoutes)
+      assert.equal(path, '/test2/foo/bar')
     })
   })
-  describe('#getPolicyFromPrerequisite errors', () => {
-    it('should log an error if there is no pre and return undefined', () => {
-      const handler = lib.Utils.getPolicyFromPrerequisite(global.app, {})
-      assert.equal(handler, undefined)
+  describe('#buildRoute', () => {
+    // it('should build valid route in typical case', () => {
+    //   const routes = global.app.config.routes
+    //   const route = lib.Utils.buildRoute(global.app, routes[0])
+    //
+    //   assert(_.isString(route.path))
+    //   assert(_.isFunction(route.handler))
+    // })
+    it('should resolve the route handler to the correct controller method', () => {
+      const [{path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': 'FooController.bar'
+      })
+
+      assert.equal(route.GET.handler, global.app.controllers.FooController.bar)
+    })
+    it('should resolve the route handler to the correct controller method', () => {
+      const [{path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': {
+          handler: 'FooController.bar'
+        }
+      })
+      assert.equal(route.GET.handler, global.app.controllers.FooController.bar)
+    })
+    it('should resolve the prerequisite handler (string) to the correct policy method', () => {
+      const [{path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': 'FooController.bar',
+        config: {
+          pre: [
+            'FooPolicy.bar'
+          ]
+        }
+      })
+
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.HEAD.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.POST.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.PUT.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.DELETE.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.CONNECT.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.OPTIONS.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.TRACE.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.PATCH.config.pre[0], global.app.policies.FooPolicy.bar)
+    })
+    it('should resolve the prerequisite handler (object) to the correct policy method', () => {
+      const [{ path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': 'FooController.bar',
+        config: {
+          pre: [
+            {
+              method: 'FooPolicy.bar'
+            }
+          ]
+        }
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
+    })
+    it('should resolve the prerequisite handler (string) to the correct policy method', () => {
+      const [{path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        'GET': {
+          method: 'FooController.bar',
+          config: {
+            pre: [
+              'FooPolicy.bar'
+            ]
+          }
+        }
+      })
+
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
     })
   })
-
-  describe('#getPrefix errors', () => {
-    it('should log an error if there is no pre and return undefined', () => {
-      assert.throws(() => lib.Utils.getPrefix(global.app, ''), RangeError)
-    })
-  })
-
-  describe('#getPathFromRoute', () => {
-    const handler = function () { }
-
-    it('should use the router config prefix', () => {
-      const app = global.app
-      app.config.immutable = false
-      app.config.set('router.prefix', '/api/v1')
-
-      const route = {
-        'POST': handler
-      }
-      const path = lib.Utils.getPathFromRoute(global.app, '/a', route)
-      assert.equal(path, '/api/v1/a')
-    })
-    it('should use the route level config prefix', () => {
-      const app = global.app
-      app.config.immutable = false
-      app.config.set('router.prefix', '/api/v1')
-
-      const route = {
-        'POST': handler,
+  describe('#policies', () => {
+    it('should inherit the Global Policy on Every Method', () => {
+      const [{ path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        '*': 'FooController.bar',
         config: {
-          prefix: '/api/v2'
+          pre: [
+            {
+              method: 'FooPolicy.bar'
+            }
+          ]
         }
-      }
-      const path = lib.Utils.getPathFromRoute(global.app, '/a', route)
-      assert.equal(path, '/api/v2/a')
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.GET.config.pre[1], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.HEAD.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.HEAD.config.pre[1], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.POST.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.POST.config.pre[1], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.PUT.config.pre[0], global.app.policies.FooPolicy.bar)
+      assert.equal(route.PUT.config.pre[1], global.app.policies.GlobalPolicy.foo)
     })
-    it('should ignore router config prefix and route level config prefix', () => {
-      const app = global.app
-      app.config.immutable = false
-      app.config.set('router.prefix', '/api/v1')
 
-      const route = {
-        'POST': handler,
-        config: {
-          prefix: false
-        }
-      }
-      const path = lib.Utils.getPathFromRoute(global.app, '/a', route)
-      assert.equal(path, '/a')
+    it('should inherit the global policy and the global GET policy', () => {
+      const [{ path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        'GET': 'FooController.bar'
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.GET.config.pre[1], global.app.policies.GetPolicy.foo)
     })
-    it('should ignore router config prefix and route level config prefix', () => {
-      const app = global.app
-      app.config.immutable = false
-      app.config.set('router.prefix', '/api/v1')
 
-      const route = {
-        'POST': handler,
-        config: {
-          prefix: 'customPrefixer.prefix'
-        }
-      }
-      const path = lib.Utils.getPathFromRoute(global.app, '/a', route)
-      assert.equal(path, '/prefix/a')
+    it('should inherit the global policy and the global GET policy and the Controller Specific Get Policy', () => {
+      const [{ path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
+        'GET': 'TestController.foo'
+      })
+      assert.equal(route.GET.config.pre[0], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.GET.config.pre[1], global.app.policies.GetPolicy.foo)
+      assert.equal(route.GET.config.pre[2], global.app.policies.FooWildCardPolicy.foo)
+      assert.equal(route.GET.config.pre[3], global.app.policies.FooGetPolicy.foo)
     })
   })
 })
-
