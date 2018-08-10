@@ -1,7 +1,10 @@
 import { FabrixApp } from '@fabrix/fabrix'
+import { FabrixController } from '@fabrix/fabrix/dist/common'
+import { FabrixPolicy } from '@fabrix/fabrix/dist/common'
 import { get, omit, isString } from 'lodash'
 import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
+
 
 export const Utils = {
   methods: [
@@ -24,9 +27,142 @@ export const Utils = {
   },
 
   /**
+   * If a route has nested methods that have a seperate prefix, then it needs to be split into
+   * multiple routes
+   */
+  splitRoute(app: FabrixApp, path: string, rawRoute: IRoute): {path: string, route: any}[] {
+    const methods = ['*', ...Utils.methods]
+    const routeMethods = new Set()
+    const usedPrefixes = new Set()
+    const orgRoute = Object.assign({ }, rawRoute)
+    const parentPrefix = get(orgRoute, 'config.prefix')
+
+    // The route must have a config to be set
+    orgRoute.config = orgRoute.config || (orgRoute.config = { })
+    orgRoute.config.pre = orgRoute.config.pre || (orgRoute.config.pre = [ ])
+
+    // Add a prefix if given
+    if (typeof parentPrefix !== 'undefined') {
+      usedPrefixes.add(parentPrefix)
+    }
+
+    // Scenario 1: A wild card has a an object config different then the top level config = method prefix
+    // Scenario 2: Prefix is set on the top level config and not on any methods = all have same prefix
+    // Scenario 3: An Identical Prefix is set on the methods and not on the parent = all have same prefix
+    // Scenario 4: A method has a different prefix then top level config = generate 2+ routes
+    // Scenario 5: There is only one method and it's prefix is different then the top level = method prefix
+    const cases = new Set()
+
+    methods.forEach(method => {
+      if (orgRoute.hasOwnProperty(method)) {
+        const methodPrefix = get(rawRoute[method], 'config.prefix')
+        routeMethods.add({[method]: methodPrefix})
+
+        // Add a prefix if given
+        if (typeof methodPrefix !== 'undefined') {
+          usedPrefixes.add(methodPrefix)
+        }
+
+        // Scenario 1
+        if (method === '*' && methodPrefix) {
+          cases.add(1)
+        }
+        // Scenario 4
+        if (typeof parentPrefix === 'undefined' && methodPrefix && usedPrefixes.size > 1) {
+          cases.add(4)
+        }
+      }
+    })
+
+    // Scenario 2
+    if (
+      typeof parentPrefix !== 'undefined'
+      && usedPrefixes.size === 1
+    ) {
+      cases.add(2)
+    }
+
+    // Scenario 3
+    if (
+      typeof parentPrefix === 'undefined'
+      && usedPrefixes.size === 1
+    ) {
+      cases.add(3)
+    }
+
+    // Scenario 5
+    if (
+      typeof parentPrefix !== 'undefined'
+      && routeMethods.size === 1
+      && usedPrefixes.size > 1
+    ) {
+      cases.add(5)
+    }
+
+    const scenarios = {
+      '1': cases.has(1),
+      '2': cases.has(2),
+      '3': cases.has(3),
+      '4': cases.has(4),
+      '5': cases.has(5)
+    }
+
+    const type = Object.keys(scenarios).find((key) => scenarios[key])
+
+    switch (type) {
+      case '1': {
+        orgRoute.config.prefix = orgRoute['*'].config.prefix
+        return Utils.buildRoute(app, path, orgRoute)
+      }
+      case '2': {
+        return Utils.buildRoute(app, path, orgRoute)
+      }
+      case '3': {
+        orgRoute.config.prefix = usedPrefixes.values().next().value
+        return Utils.buildRoute(app, path, orgRoute)
+      }
+      case '4': {
+        const routes = new Set()
+        const newRoutes = new Map()
+        routeMethods.forEach(route => {
+          const method: string = Object.keys(route)[0]
+          const prefix: any = route[method]
+          if (prefix !== parentPrefix) {
+            const newRoute: IRoute = {
+              [method]: orgRoute[method],
+              config: {
+                prefix: prefix
+              }
+            }
+            if (newRoutes.has(prefix)) {
+              newRoutes.set(prefix, {...newRoute,  ...newRoutes.get(prefix)})
+            }
+            else {
+              newRoutes.set(prefix, newRoute)
+            }
+            delete orgRoute[method]
+          }
+        })
+        newRoutes.forEach(newRoute => {
+          routes.add(Utils.buildRoute(app, path, newRoute))
+        })
+        routes.add(Utils.buildRoute(app, path, orgRoute))
+        return Array.from(routes).reduce((a, b) => a.concat(b), [])
+      }
+      case '5': {
+        orgRoute.config.prefix = Array.from(usedPrefixes).pop()
+        return Utils.buildRoute(app, path, orgRoute)
+      }
+      default: {
+        return Utils.buildRoute(app, path, orgRoute)
+      }
+    }
+  },
+
+  /**
    * Build a complete route, with bound handler and attached preconditions
    */
-  buildRoute (app: FabrixApp, path: string, rawRoute: IRoute) {
+  buildRoute(app: FabrixApp, path: string, rawRoute: IRoute): {path: string, route: any}[] {
     const orgRoute = Object.assign({ }, rawRoute)
     orgRoute.config = orgRoute.config || (orgRoute.config = { })
     orgRoute.config.pre = orgRoute.config.pre || (orgRoute.config.pre = [ ])
@@ -53,7 +189,7 @@ export const Utils = {
     if (!orgRouteHandlers.some(v => Utils.methods.indexOf(v) >= 0 || !!orgRoute[v])) {
       app.log.error('spool-router: route ', path, ' handler [', orgRouteHandlers.join(', '), ']',
         'does not correspond to any defined Controller handler')
-      return {}
+      return []
     }
 
     orgRouteHandlers.forEach(method => {
@@ -69,15 +205,16 @@ export const Utils = {
 
     const route = omit(orgRoute, 'config')
 
-    return { path, route }
+    return [{ path, route }]
   },
 
   /**
    * Expands the search for the prefix to the route or config.* level
    */
-  getRouteLevelPrefix(app: FabrixApp, route) {
+  getRouteLevelPrefix(app: FabrixApp, route): string | null {
     const configuredPrefix = app.config.get(route.config.prefix)
-    const routePrefix = route.config.prefix
+    const routePrefix = get(route, 'config.prefix')
+
     if (typeof configuredPrefix !== 'undefined') {
       if (configuredPrefix) {
         return (configuredPrefix).replace(/$\//, '')
@@ -110,7 +247,7 @@ export const Utils = {
   /**
    * Build the Path from the Route config
    */
-  getPathFromRoute (app: FabrixApp, path, route) {
+  getPathFromRoute (app: FabrixApp, path, route): string {
     if (!route || !(route instanceof Object)) {
       throw new RangeError('Expected a route object')
     }
@@ -121,14 +258,14 @@ export const Utils = {
     return `${ prefix }/${ path }`
   },
 
-  getPolicyFromString(app: FabrixApp, handler) {
+  getPolicyFromString(app: FabrixApp, handler): FabrixPolicy {
     return get(app.policies, handler)
   },
 
   /**
    * Get a Controller's method's policies
    */
-  getControllerPolicy(app: FabrixApp, handler, routeMethod, pre = [ ]) {
+  getControllerPolicy(app: FabrixApp, handler, routeMethod, pre = [ ]): FabrixPolicy[] {
     const controller = Utils.getControllerFromHandler(handler)
 
     if (app.config.get('policies.*.*')) {
@@ -176,11 +313,17 @@ export const Utils = {
     return handler
   },
 
-  getControllerFromString(app: FabrixApp, handler) {
+  /**
+   *
+   */
+  getControllerFromString(app: FabrixApp, handler): FabrixController {
     return get(app.controllers, handler)
   },
 
-  getControllerFromHandler(handler) {
+  /**
+   *
+   */
+  getControllerFromHandler(handler): string {
     return isString(handler) ? handler.split('.')[0] : handler
   },
 
@@ -237,9 +380,10 @@ export const Utils = {
    * Build a route collection
    */
   buildRoutes(app: FabrixApp, routes, toReturn = {}) {
-    Object.keys(routes).forEach(r => {
-      const { path, route } = Utils.buildRoute(app, r, routes[r])
-      toReturn[path] = route
+    Object.keys(routes).forEach(p => {
+      Utils.splitRoute(app, p, routes[p]).forEach(({ path, route }) => {
+        toReturn[path] = route
+      })
     })
     return Utils.sortRoutes(toReturn, app.config.get('router.sortOrder'))
   },

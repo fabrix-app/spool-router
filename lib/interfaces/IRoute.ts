@@ -1,8 +1,10 @@
 export interface IRoute {
   [key: string]: any,
-  _orgPath: string,
+  _orgPath?: string,
+  _newPath?: string,
   config?: {
-    pre?: any,
-    [key: string]: { [key: string]: any }
+    [key: string]: { [key: string]: any },
+    prefix?: any,
+    pre?: any
   }
 }
