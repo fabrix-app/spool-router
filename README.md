@@ -19,11 +19,12 @@ $ npm install @fabrix/spool-router --save
 Load from your spool config. (This pack is included by default).
 
 ```js
-// config/main.js
-module.exports = {
+// config/main.ts
+import { RouterSpool } from '@fabrix/spool-router'
+export const main = {
   // ...
   spools: [
-    require('spool-router').Router
+    RouterSpool
   ]
 }
 ```
@@ -43,7 +44,7 @@ export const router = {
 This will sort the routes based on the key (path) either ascending or descending. This is used in spools like Express where the order of routes matters.
 
 ##### router.prefix
-This config is optional and can be left as `''`.  This will prefix each route with the specified prefix.
+This config is optional and can be left as `''` or `null`.  This will prefix each route with the specified prefix.
 
 #### `config.routes`
 The list of route objects to be compiled for use by the webserver.
@@ -128,7 +129,7 @@ Optionally:
   // ...
 }
 ```
-The Configuration about, will ignore any prefix given to it. 
+The Configuration above, will ignore any prefix given to it. 
 
 Optionally:
 
@@ -146,6 +147,33 @@ Optionally:
 ```
 The configuration above will take the configuration of another config attribute, in this case: `app.config.customPrefixer.prefix` is set to `/custom/endpoint` so the resulting route prefix will be `/custom/endpoint/example/test`
 
+Finally, you can also provide 2 different prefixes for the same route with different methods.
+
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': {
+      handler: 'ExampleController.get',
+      config: {
+        prefix: '/api/v1'
+        pre: [ 'ExamplePolicy.get' ]
+      }
+    },
+    'POST': {
+      handler: 'ExampleController.post',
+      config: {
+        prefix: '/api/v2'
+        pre: [ 'ExamplePolicy.post' ]
+      }
+    }
+  }
+  // ...
+}
+```
+
+The configuration above will produce 2 routes, one for `GET /api/v1/example/test` and one for `POST /api/v2/example/test` respecting their prefixes. This is useful for when one method may still be on an older API than the other or they need to be handled differently.
+
 ## Tapestries and Policies
 
 Support for tapestries and Policies is provided by [spool-tapestries](https://github.com/fabrix-app/spool-tapestries).
@@ -162,8 +190,8 @@ for more information.
 ## License
 [MIT](https://github.com/fabrix-app/spool-router/blob/master/LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/spool-router.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/spool-router
+[npm-image]: https://img.shields.io/npm/v/@fabrix/spool-router.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/@fabrix/spool-router
 [ci-image]: https://img.shields.io/circleci/project/github/fabrix-app/spool-router/master.svg
 [ci-url]: https://circleci.com/gh/fabrix-app/spool-router/tree/master
 [daviddm-image]: http://img.shields.io/david/fabrix-app/spool-router.svg?style=flat-square
