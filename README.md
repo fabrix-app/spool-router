@@ -190,8 +190,8 @@ for more information.
 ## License
 [MIT](https://github.com/fabrix-app/spool-router/blob/master/LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/spool-router.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/spool-router
+[npm-image]: https://img.shields.io/npm/v/@fabrix/spool-router.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/@fabrix/spool-router
 [ci-image]: https://img.shields.io/circleci/project/github/fabrix-app/spool-router/master.svg
 [ci-url]: https://circleci.com/gh/fabrix-app/spool-router/tree/master
 [daviddm-image]: http://img.shields.io/david/fabrix-app/spool-router.svg?style=flat-square
