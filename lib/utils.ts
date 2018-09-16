@@ -1,5 +1,5 @@
 import { FabrixApp } from '@fabrix/fabrix'
-import { FabrixController } from '@fabrix/fabrix/dist/common'
+import { FabrixController, FabrixGeneric } from '@fabrix/fabrix/dist/common'
 import { FabrixPolicy } from '@fabrix/fabrix/dist/common'
 import { get, omit, isString } from 'lodash'
 import { Router } from 'call'
@@ -258,7 +258,7 @@ export const Utils = {
     return `${ prefix }/${ path }`
   },
 
-  getPolicyFromString(app: FabrixApp, handler): FabrixPolicy {
+  getPolicyFromString(app: FabrixApp, handler): FabrixGeneric | FabrixPolicy {
     return get(app.policies, handler)
   },
 
@@ -316,7 +316,7 @@ export const Utils = {
   /**
    *
    */
-  getControllerFromString(app: FabrixApp, handler): FabrixController {
+  getControllerFromString(app: FabrixApp, handler): FabrixGeneric | FabrixController {
     return get(app.controllers, handler)
   },
 
