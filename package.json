@@ -1,6 +1,6 @@
 {
   "name": "@fabrix/spool-router",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Spool - Router for Fabrix",
   "scripts": {
     "build": "tsc -p ./lib/tsconfig.release.json",
@@ -14,7 +14,8 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "archetype"
   ],
   "pre-commit": [
     "test"
@@ -49,11 +50,11 @@
     "lodash": "^4.17.11"
   },
   "devDependencies": {
-    "@fabrix/fabrix": "^1.5.0",
+    "@fabrix/fabrix": "^1.5.9",
     "@fabrix/lint": "^1.0.0-alpha.3",
     "@types/lodash": "^4.14.109",
     "@types/node": "~10.3.4",
-    "hapi": "^17.5",
+    "hapi": "^17.6",
     "mocha": "^5",
     "nyc": "^13.0.1",
     "smokesignals": "^3",
@@ -64,7 +65,7 @@
     "typescript": "~2.8.1"
   },
   "peerDependencies": {
-    "@fabrix/fabrix": "^1.1.4"
+    "@fabrix/fabrix": "^1.5.9"
   },
   "license": "MIT",
   "bugs": {
