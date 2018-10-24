@@ -8,7 +8,7 @@
 [![Dependency Status][daviddm-image]][daviddm-url]
 [![Follow @FabrixApp on Twitter][twitter-image]][twitter-url]
 
-Spool Router. Aggregates all routes from `config.routes` to create [hapi.js route objects](http://hapijs.com/api#route-configuration).
+Spool Router. Aggregates all routes from `config.routes` to create routes for webserver spools.
 
 ## Install
 ```sh
@@ -37,14 +37,14 @@ The Router takes a few Configuration values
 // config/router.ts
 export const router = {
   sortOrder: 'asc', // (asc | desc)
-  prefix: '/api/v1'
+  prefix: '/api/v1' // (/my/api/endpoint | <myconfig.prefix>)
 }
 ```
 ##### router.sortOrder
 This will sort the routes based on the key (path) either ascending or descending. This is used in spools like Express where the order of routes matters.
 
 ##### router.prefix
-This config is optional and can be left as `''` or `null`.  This will prefix each route with the specified prefix.
+This config is optional and can be left as `''`, `null`, or `false`.  This will prefix each route with the specified prefix unless set individually on the route.  The prefix for a route is powerful, and special consideration is given to it when compiling the route tuples.
 
 #### `config.routes`
 The list of route objects to be compiled for use by the webserver.
@@ -147,7 +147,7 @@ Optionally:
 ```
 The configuration above will take the configuration of another config attribute, in this case: `app.config.customPrefixer.prefix` is set to `/custom/endpoint` so the resulting route prefix will be `/custom/endpoint/example/test`
 
-Finally, you can also provide 2 different prefixes for the same route with different methods.
+Additionally, you can also provide 2 different prefixes for the same route with different methods.
 
 ```js
 {
@@ -173,6 +173,41 @@ Finally, you can also provide 2 different prefixes for the same route with diffe
 ```
 
 The configuration above will produce 2 routes, one for `GET /api/v1/example/test` and one for `POST /api/v2/example/test` respecting their prefixes. This is useful for when one method may still be on an older API than the other or they need to be handled differently.
+
+##### TODO
+
+Finally, you can version control your route controllers by using the prefixes attribute, which will simply split your routes.
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': {
+      prefixes: {
+        '/api/v1': {
+          handler: 'ExampleController.get',
+            config: {},
+            pre: [ 'ExamplePolicy.get' ]
+          },
+        },
+        '/api/v2': {
+          handler: 'ExampleController.get2',
+            config: {},
+            pre: [ 'ExamplePolicy.get2' ]
+          }
+        }
+      }
+    },
+    'POST': {
+      handler: 'ExampleController.post',
+      config: {
+        prefix: '/api/v2'
+        pre: [ 'ExamplePolicy.post' ]
+      }
+    }
+  }
+  // ...
+}
+```
 
 ## Tapestries and Policies
 
