@@ -180,7 +180,7 @@ Support for tapestries and Policies is provided by [spool-tapestries](https://gi
 
 ## Compatible Spools
 - [spool-express](https://github.com/fabrix-app/spool-express)
-- [spool-hapi](https://github.com/fabrix-app/spool-hapi) (TODO)
+- [spool-hapi](https://github.com/fabrix-app/spool-hapi)
 - [spool-koa](https://github.com/fabrix-app/spool-koa) (TODO)
 
 ## Contributing
