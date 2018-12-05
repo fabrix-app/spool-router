@@ -1,4 +1,6 @@
-require('@fabrix/fabrix')
+'use strict'
+const Controller = require('@fabrix/fabrix/dist/common/Controller').FabrixController
+const Policy = require('@fabrix/fabrix/dist/common/Policy').FabrixPolicy
 
 module.exports = {
   pkg: {
