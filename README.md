@@ -8,7 +8,7 @@
 [![Dependency Status][daviddm-image]][daviddm-url]
 [![Follow @FabrixApp on Twitter][twitter-image]][twitter-url]
 
-Spool Router. Aggregates all routes from `config.routes` to create [hapi.js route objects](http://hapijs.com/api#route-configuration).
+Spool Router. Aggregates all routes from `config.routes` to create a Fabrix Route which is easily translated to [hapi.js route objects](http://hapijs.com/api#route-configuration), Express.js routes, or your own!
 
 ## Install
 ```sh
