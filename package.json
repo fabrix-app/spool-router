@@ -45,7 +45,7 @@
     }
   ],
   "dependencies": {
-    "joi": "^13.6.0",
+    "joi": "^14.3.0",
     "call": "^5",
     "lodash": "^4.17.11"
   },
@@ -54,9 +54,9 @@
     "@fabrix/lint": "^1.0.0-alpha.3",
     "@types/lodash": "^4.14.109",
     "@types/node": "~10.3.4",
-    "hapi": "^17.6",
+    "hapi": "^17.8",
     "mocha": "^5",
-    "nyc": "^13.0.1",
+    "nyc": "^13.1.0",
     "smokesignals": "^3",
     "tslib": "~1.9.0",
     "tslint": "~5.10.0",
