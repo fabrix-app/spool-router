@@ -29,8 +29,14 @@ module.exports = {
       GetPolicy: class GetPolicy extends Policy {
         foo () { }
       },
+      PostPolicy: class PostPolicy extends Policy {
+        post () { }
+      },
       FooGetPolicy: class FooGetPolicy extends Policy {
         foo () { }
+      },
+      FooPostPolicy: class FooPostPolicy extends Policy {
+        post () { }
       },
       FooWildCardPolicy: class FooWildCardPolicy extends Policy {
         foo () { }
@@ -54,20 +60,22 @@ module.exports = {
     policies: {
       '*': {
         '*': ['GlobalPolicy.foo'],
-        'GET': ['GetPolicy.foo']
+        'GET': ['GetPolicy.foo'],
+        'POST': ['PostPolicy.post'],
       },
       'TestController': {
         '*': {
           '*': ['FooWildCardPolicy.foo']
         },
         'foo': {
-          'GET': ['FooGetPolicy.foo']
+          'GET': ['FooGetPolicy.foo'],
+          'POST': ['FooPostPolicy.post']
         }
       }
     },
     routes: {
       '/test/foo': {
-        'GET': 'TestController.foo'
+        'GET': 'TestController.foo',
       },
       '/test/{foo}': {
         'GET': 'TestController.foo'

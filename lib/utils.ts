@@ -267,21 +267,49 @@ export const Utils = {
    */
   getControllerPolicy(app: FabrixApp, handler, routeMethod, pre = [ ]): FabrixPolicy[] {
     const controller = Utils.getControllerFromHandler(handler)
+    const method = Utils.getControllerMethodFromHandler(handler)
 
     if (app.config.get('policies.*.*')) {
+      // console.log(handler, routeMethod,
+      //   'policies.*.*',
+      //   app.config.get('policies.*.*')
+      // )
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get('policies.*.*'))])]
     }
     if (app.config.get(`policies.*.${routeMethod}`)) {
+      // console.log(handler, routeMethod,
+      //   `policies.*.${routeMethod}`,
+      //   app.config.get(`policies.*.${routeMethod}`)
+      // )
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.*.${routeMethod}`))])]
     }
-    if (handler && controller && app.config.get(`policies.${controller}.*.*`)) {
+    if (controller && app.config.get(`policies.${controller}.*.*`)) {
+      // console.log(handler, routeMethod,
+      //   `policies.${controller}.*.*`,
+      //   app.config.get(`policies.${controller}.*.*`)
+      // )
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.*.*`))])]
     }
-    if (handler && controller && app.config.get(`policies.${controller}.*.${routeMethod}`)) {
+    if (controller && app.config.get(`policies.${controller}.*.${routeMethod}`)) {
+      // console.log(handler, routeMethod,
+      //   `policies.${controller}.*.${routeMethod}`,
+      //   app.config.get(`policies.${controller}.*.${routeMethod}`)
+      // )
       pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.*.${routeMethod}`))])]
     }
-    if (handler && app.config.get(`policies.${handler}.${routeMethod}`)) {
-      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${handler}.${routeMethod}`))])]
+    if (controller && method && app.config.get(`policies.${controller}.${method}.*`)) {
+      // console.log(handler, routeMethod
+      //   `policies.${controller}.${method}.*`,
+      //   app.config.get(`policies.${controller}.${method}.*`)
+      // )
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.${method}.*`))])]
+    }
+    if (controller && method && app.config.get(`policies.${controller}.${method}.${routeMethod}`)) {
+      // console.log(handler,
+      //   `policies.${controller}.${method}.${routeMethod}`,
+      //   app.config.get(`policies.${controller}.${method}.${routeMethod}`)
+      // )
+      pre = [...new Set([...pre, ...Utils.stringToArray(app.config.get(`policies.${controller}.${method}.${routeMethod}`))])]
     }
     return pre
   },
@@ -295,7 +323,9 @@ export const Utils = {
       handler = Utils.getPolicyFromString(app, pre)
     }
     else if (pre && Array.isArray(pre)) {
-      handler = pre.map(p => Utils.getPolicyFromString(app, p)).filter(p => p)
+      handler = pre
+        .map(p => Utils.getPolicyFromString(app, p))
+        .filter(p => p)
     }
     else if (pre && typeof pre.method === 'string') {
       handler = Utils.getPolicyFromString(app, pre.method)
@@ -327,6 +357,10 @@ export const Utils = {
     return isString(handler) ? handler.split('.')[0] : handler
   },
 
+  getControllerMethodFromHandler(handler): string {
+    return isString(handler) ? handler.split('.')[1] : handler
+  },
+
   /**
    * Get handler method from a controller.method string path
    */
@@ -341,28 +375,36 @@ export const Utils = {
 
     Utils.methods.forEach(method => {
       if (route[method]) {
-        route.config = route.config || { }
-        route.config.pre = Utils.getControllerPolicy(app, null, method, route.config.pre)
+        console.log('\n')
+        // Clean copy of config
+        const config = Object.assign({}, route.config)
+        // Clean copy of config.pre
+        config.pre = (route.config.pre || []).slice()
+        // Get Policies
+        config.pre = Utils.getControllerPolicy(app, null, method, config.pre)
 
         if (typeof route[method] === 'string') {
-          route.config.pre = Utils.getControllerPolicy(app, route[method], method, route.config.pre)
-          return route[method] = {
-            handler: Utils.getControllerFromString(app, route[method]),
-            config: route.config
+          const handler = route[method]
+          route[method] = {
+            handler: Utils.getControllerFromString(app, handler),
+            config: config
           }
+          route[method].config.pre = Utils.getControllerPolicy(app, handler, method, route[method].config.pre)
+          return route[method]
         }
         else if (route[method] instanceof Object && route[method].hasOwnProperty('handler')) {
-          route[method].config = route[method].config || route.config
-          route[method].config.pre = route[method].config.pre || route.config.pre
+          route[method].config = route[method].config || config
+          route[method].config.pre = route[method].config.pre || config.pre
 
           if (typeof route[method].handler === 'string') {
-            route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, route.config.pre)
+            route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, config.pre)
             return route[method] = {
               ...route[method],
               handler: Utils.getControllerFromString(app, route[method].handler)
             }
           }
           else {
+            // route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, route.config.pre)
             return route[method] = {
               ...route[method],
               handler: route[method].handler
