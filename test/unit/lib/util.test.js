@@ -250,14 +250,24 @@ describe('lib.Util', () => {
       assert.equal(route.GET.config.pre[1], global.app.policies.GetPolicy.foo)
     })
 
-    it('should inherit the global policy and the global GET policy and the Controller Specific Get Policy', () => {
+    it('should inherit the global policy and the global GET/POST policy and the Controller Specific Get/POST Policy', () => {
       const [{ path, route}] = lib.Utils.buildRoute(global.app, '/foo/bar', {
-        'GET': 'TestController.foo'
+        'GET': 'TestController.foo',
+        'POST': 'TestController.foo'
       })
+      console.log('BRK 1', route.GET.config)
       assert.equal(route.GET.config.pre[0], global.app.policies.GlobalPolicy.foo)
       assert.equal(route.GET.config.pre[1], global.app.policies.GetPolicy.foo)
       assert.equal(route.GET.config.pre[2], global.app.policies.FooWildCardPolicy.foo)
       assert.equal(route.GET.config.pre[3], global.app.policies.FooGetPolicy.foo)
+      assert.equal(route.GET.config.pre.length, 4)
+
+      console.log('BRK 2', route.POST.config)
+      assert.equal(route.POST.config.pre[0], global.app.policies.GlobalPolicy.foo)
+      assert.equal(route.POST.config.pre[1], global.app.policies.PostPolicy.post)
+      assert.equal(route.POST.config.pre[2], global.app.policies.FooWildCardPolicy.foo)
+      assert.equal(route.POST.config.pre[3], global.app.policies.FooPostPolicy.post)
+      assert.equal(route.POST.config.pre.length, 4)
     })
   })
 })
