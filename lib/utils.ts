@@ -375,7 +375,6 @@ export const Utils = {
 
     Utils.methods.forEach(method => {
       if (route[method]) {
-        console.log('\n')
         // Clean copy of config
         const config = Object.assign({}, route.config)
         // Clean copy of config.pre
@@ -395,16 +394,16 @@ export const Utils = {
         else if (route[method] instanceof Object && route[method].hasOwnProperty('handler')) {
           route[method].config = route[method].config || config
           route[method].config.pre = route[method].config.pre || config.pre
-
+          route[method].config.pre = Utils.getControllerPolicy(app, route[method].handler, method, route[method].config.pre)
           if (typeof route[method].handler === 'string') {
-            route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, config.pre)
+
             return route[method] = {
               ...route[method],
-              handler: Utils.getControllerFromString(app, route[method].handler)
+              handler: Utils.getControllerFromString(app, route[method].handler),
             }
           }
           else {
-            // route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, route.config.pre)
+            // route.config.pre = Utils.getControllerPolicy(app, route[method].handler, method, config.pre)
             return route[method] = {
               ...route[method],
               handler: route[method].handler
