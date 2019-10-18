@@ -37,7 +37,10 @@ The Router takes a few Configuration values
 // config/router.ts
 export const router = {
   sortOrder: 'asc', // (asc | desc)
-  prefix: '/api/v1'
+  default: '', // the default or home route
+  catchAllRoute: '*', // the catch all handler route
+  prefix: '/api/v1',
+  debug: false // if the router needs to log all debugs
 }
 ```
 ##### router.sortOrder
@@ -45,6 +48,13 @@ This will sort the routes based on the key (path) either ascending or descending
 
 ##### router.prefix
 This config is optional and can be left as `''` or `null`.  This will prefix each route with the specified prefix.
+
+##### router.default
+This config is optional and can be left as `''` or `null`.  This is '/' in express, but '' in Hapi
+
+##### router.catchAllRoute
+This config is optional and can be left as `''` or `null`.  This is '*' in express and Hapi
+
 
 #### `config.routes`
 The list of route objects to be compiled for use by the webserver.

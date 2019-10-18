@@ -465,15 +465,24 @@ export const Utils = {
         toReturn[path] = route
       })
     })
-    return Utils.sortRoutes(toReturn, app.config.get('router.sortOrder'))
+    return Utils.sortRoutes(
+      toReturn,
+      app.config.get('router.sortOrder'),
+      app.config.get('router.default'),
+      app.config.get('router.catchAllRoute')
+    )
   },
 
   /**
    * Sort a route collection by object key
    */
-  sortRoutes(routes, order): Map<any, any> {
+  sortRoutes(routes, order, defaultRoute, catchAllRoute): Map<any, any> {
     const toReturn = new Map
-    const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({ order: order }))
+    const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({
+      order: order,
+      default: defaultRoute,
+      catchAllRoute: catchAllRoute
+    }))
     sorted.forEach((r, i) => {
       toReturn.set(r, routes[r])
     })
