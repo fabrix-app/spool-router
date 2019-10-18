@@ -1,6 +1,7 @@
 import { FabrixApp } from '@fabrix/fabrix'
 import { FabrixController, FabrixGeneric } from '@fabrix/fabrix/dist/common'
 import { FabrixPolicy } from '@fabrix/fabrix/dist/common'
+import { ConfigValueError } from '@fabrix/fabrix/dist/errors'
 import { get, omit, isString } from 'lodash'
 import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
@@ -27,15 +28,35 @@ export const Utils = {
   },
 
   /**
-   * If a route has nested methods that have a seperate prefix, then it needs to be split into
+   * If a route has nested methods that have a separate prefix, then it needs to be split into
    * multiple routes
    */
   splitRoute(app: FabrixApp, path: string, rawRoute: IRoute): {path: string, route: any}[] {
     const methods = ['*', ...Utils.methods]
+    // Map for the Route Methods
     const routeMethods = new Set()
+    // Map for the used prefixes (they need to be unique)
     const usedPrefixes = new Set()
+    // Map for the used scopes (they need to be unique)
+    const usedScopes = new Set()
+
+    // Scenario 1: A wild card has a an object config different then the top level config = method prefix
+    // Scenario 2: Prefix is set on the top level config and not on any methods = all have same prefix
+    // Scenario 3: An Identical Prefix is set on the methods and not on the parent = all have same prefix
+    // Scenario 4: A method has a different prefix then top level config = generate 2+ routes
+    // Scenario 5: There is only one method and it's prefix is different then the top level = method prefix
+    // Scenario 6: There route method is versioned, in which case it should use the version's prefix before going to defaults
+    // Scenario 7: There route wildcard is versioned, in which case it should use the version's prefix before going to defaults
+    const cases = new Set()
+
+    // Clone of the original route
     const orgRoute = Object.assign({ }, rawRoute)
+    // If there is a root level prefix, then set it eg /example: { config: { prefix: '/test' }}
     const parentPrefix = get(orgRoute, 'config.prefix')
+    // If there is a root level auth scope, then set it eg /example: { config: { scope: 'private' }}
+    const parentScope = get(orgRoute, 'config.scope')
+    // const versionPrefixes = (get(orgRoute, 'versions') || [])
+    //   .map(v =>)
 
     // The route must have a config to be set
     orgRoute.config = orgRoute.config || (orgRoute.config = { })
@@ -45,22 +66,33 @@ export const Utils = {
     if (typeof parentPrefix !== 'undefined') {
       usedPrefixes.add(parentPrefix)
     }
+    // Add a scope if given
+    if (typeof parentScope !== 'undefined') {
+      usedScopes.add(parentScope)
+    }
 
-    // Scenario 1: A wild card has a an object config different then the top level config = method prefix
-    // Scenario 2: Prefix is set on the top level config and not on any methods = all have same prefix
-    // Scenario 3: An Identical Prefix is set on the methods and not on the parent = all have same prefix
-    // Scenario 4: A method has a different prefix then top level config = generate 2+ routes
-    // Scenario 5: There is only one method and it's prefix is different then the top level = method prefix
-    const cases = new Set()
-
+    // Cycle through All the available methods
     methods.forEach(method => {
+      // The route has the method
       if (orgRoute.hasOwnProperty(method)) {
+        const methodVersions = new Map(Object.entries(get(rawRoute[method], 'versions') || {}))
+
         const methodPrefix = get(rawRoute[method], 'config.prefix')
         routeMethods.add({[method]: methodPrefix})
+
+        const methodScope = get(rawRoute[method], 'config.scope')
 
         // Add a prefix if given
         if (typeof methodPrefix !== 'undefined') {
           usedPrefixes.add(methodPrefix)
+        }
+        // Add a scope if given
+        if (typeof methodScope !== 'undefined') {
+          usedScopes.add(methodScope)
+        }
+
+        if (method === '*' && methodVersions.size > 0) {
+          cases.add(7)
         }
 
         // Scenario 1
@@ -68,7 +100,11 @@ export const Utils = {
           cases.add(1)
         }
         // Scenario 4
-        if (typeof parentPrefix === 'undefined' && methodPrefix && usedPrefixes.size > 1) {
+        if (
+          typeof parentPrefix === 'undefined'
+          && methodPrefix
+          && usedPrefixes.size > 1
+        ) {
           cases.add(4)
         }
       }
@@ -99,12 +135,15 @@ export const Utils = {
       cases.add(5)
     }
 
+    // Map the scenarios cases
     const scenarios = {
       '1': cases.has(1),
       '2': cases.has(2),
       '3': cases.has(3),
       '4': cases.has(4),
-      '5': cases.has(5)
+      '5': cases.has(5),
+      '6': cases.has(6),
+      '7': cases.has(7),
     }
 
     const type = Object.keys(scenarios).find((key) => scenarios[key])
@@ -233,7 +272,7 @@ export const Utils = {
    */
   getPrefix (app: FabrixApp, route): string {
     if (!route || !(route instanceof Object)) {
-      throw new RangeError('Expected a route object')
+      throw new ConfigValueError('Expected a route object')
     }
 
     const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
@@ -249,7 +288,7 @@ export const Utils = {
    */
   getPathFromRoute (app: FabrixApp, path, route): string {
     if (!route || !(route instanceof Object)) {
-      throw new RangeError('Expected a route object')
+      throw new ConfigValueError('Expected a route object')
     }
 
     path = path.replace(/^\//, '')
@@ -420,7 +459,7 @@ export const Utils = {
   /**
    * Build a route collection
    */
-  buildRoutes(app: FabrixApp, routes, toReturn = {}) {
+  buildRoutes(app: FabrixApp, routes, toReturn = {}): Map<any, any> {
     Object.keys(routes).forEach(p => {
       Utils.splitRoute(app, p, routes[p]).forEach(({ path, route }) => {
         toReturn[path] = route
@@ -432,7 +471,7 @@ export const Utils = {
   /**
    * Sort a route collection by object key
    */
-  sortRoutes(routes, order) {
+  sortRoutes(routes, order): Map<any, any> {
     const toReturn = new Map
     const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({ order: order }))
     sorted.forEach((r, i) => {
@@ -443,27 +482,33 @@ export const Utils = {
   /**
    * Sorts routes based free variables.
    */
-  createSpecificityComparator: function (options) {
-    options = options || {}
+  createSpecificityComparator: function (options: {[key: string]: any} = {}) {
+    // Bit misleading: here we mean that the default (or home) route is '' if not defined
+    const defaultRoute = options.default || ''
+    const defaultRegex = new RegExp('^\\' + defaultRoute + '$', 'g')
+    // This is a wildcard catch all route in Express
+    const catchAllRoute = options.catchAllRoute || '*'
+
     // Ascending order flag, defaults to false
     let asc = false
+
     if (options.order && options.order === 'asc') {
       asc = true
     }
-    // Bit misleading: here we mean that the default route is ''
-    const defaultRoute = options.default || ''
-    // This is a wildcard catch all route in Express
-    const catchAllRoute = options.catchAllRoute || '*'
 
     return function specificityComparator(routeA, routeB) {
       routeA = (routeA || '').toLowerCase()
       routeB = (routeB || '').toLowerCase()
       // If it's the default route, push it all the way
       // over to one of the ends
-      if (
+      if (routeB === catchAllRoute) {
+        return asc ? -1 : 1
+      }
+      else if (
         routeA === defaultRoute
         || routeA === catchAllRoute
       ) {
+        // console.log('yep a', routeA === defaultRoute, routeA === catchAllRoute)
         return asc ? 1 : -1
       }
       // Also push index route down to end, but not past the default
@@ -471,10 +516,18 @@ export const Utils = {
         routeB === defaultRoute
         || routeB === catchAllRoute
       ) {
+        // console.log('yep b', routeB === defaultRoute, routeB === catchAllRoute)
         return asc ? -1 : 1
       }
       // Also push index route down to end, but not past the default
-      else if (/^\/$/.test(routeA) && (routeB !== defaultRoute && routeB !== catchAllRoute)) {
+      else if (
+        (/^\/$/.test(routeA) || defaultRegex.test(routeA))
+        && (
+          routeB !== defaultRoute
+          && routeB !== catchAllRoute
+        )
+      ) {
+        // console.log('yep c', routeB !== defaultRoute, routeB !== catchAllRoute, routeB)
         return asc ? 1 : -1
       }
       // Otherwise, sort based on either depth or free variable priority
@@ -549,15 +602,19 @@ export const Utils = {
    *
    * Weight can only be used to compare paths of the same depth
    */
-  freeVariableWeight: function (sliced) {
-    const colMatches = sliced.match(/(:|\{)/gm)
-    const optionalMatches = sliced.match(/(\?\})/gm)
+  freeVariableWeight: function (slice: string) {
+    const colMatches = slice.match(/(:|\{)/gm)
+    const optionalMatches = slice.match(/(\?\})/gm)
     const col = colMatches ? colMatches.length : 0
     const optional = optionalMatches ? optionalMatches.length : 0
     return col - optional
   },
 
-  optionalParts: function (sliced) {
+  /**
+   *
+   * @param sliced
+   */
+  optionalParts: function (sliced: string[]) {
     let count = 0
     sliced.forEach(slice => {
       if (!/\{.*\?\}$/.test(slice)) {

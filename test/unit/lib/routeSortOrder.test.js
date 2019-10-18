@@ -144,7 +144,10 @@ describe('Utils Route Sort Order', () => {
       '/b/*': {},
     }
 
-    const order = Object.keys(routes).sort(routeOrder({order: 'asc'}))
+    const order = Object.keys(routes).sort(routeOrder({
+      order: 'asc',
+      default: '/'
+    }))
     assert.deepEqual(order, [
       '/a',
       '/a/{id}',

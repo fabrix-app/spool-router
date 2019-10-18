@@ -3,6 +3,7 @@
   "version": "1.6.2",
   "description": "Spool - Router for Fabrix",
   "scripts": {
+    "release": "standard-version",
     "build": "tsc -p ./lib/tsconfig.release.json",
     "lint": "tslint -p ./lib",
     "watch": "tsc -w -p ./lib/tsconfig.release.json",
@@ -45,24 +46,28 @@
     }
   ],
   "dependencies": {
-    "joi": "^14.3.0",
     "call": "^5",
-    "lodash": "^4.17.11"
+    "joi": "^14.3.1",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "@fabrix/fabrix": "^1.6.0",
+    "@fabrix/fabrix": "^1.6.4",
     "@fabrix/lint": "^1.0.0-alpha.3",
     "@types/lodash": "^4.14.109",
     "@types/node": "~10.3.4",
-    "hapi": "^17.8",
-    "mocha": "^5",
-    "nyc": "^13.1.0",
+    "hapi": "^18.1.0",
+    "mocha": "^6",
+    "nyc": "^14.1.1",
     "smokesignals": "^3",
+    "source-map-support": "^0.5.13",
+    "standard-version": "^7.0.0",
     "tslib": "~1.9.0",
-    "tslint": "~5.10.0",
-    "tslint-microsoft-contrib": "~5.0.3",
-    "tsutils": "~2.27.1",
-    "typescript": "~2.8.1"
+    "tslint": "~5.14.0",
+    "tslint-microsoft-contrib": "~6.1.0",
+    "tsutils": "~3.9.1",
+    "typedoc": "^0.15.0",
+    "typedoc-plugin-markdown": "^2.2.7",
+    "typescript": "~3.3.4000"
   },
   "peerDependencies": {
     "@fabrix/fabrix": "^1.6.0"

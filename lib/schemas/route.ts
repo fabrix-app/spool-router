@@ -1,61 +1,11 @@
-import * as joi from 'joi'
+import joi from 'joi'
+export const handler = joi.alternatives().try(
+  joi.func(),
+  joi.string(),
+  joi.object()
+)
 
-export const routeSchema = joi.object().keys({
-  // method: joi.alternatives().try(
-  //   joi.string(),
-  //   joi.array()
-  // ),
-  // path: joi.string().required(),
-  '*': joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  GET: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  HEAD: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  POST: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  PUT: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  DELETE: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  CONNECT: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  OPTIONS: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  TRACE: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
-  PATCH: joi.alternatives().try(
-    joi.func(),
-    joi.string(),
-    joi.object()
-  ),
+export const route = {
   vhost: joi.string(),
   cache: joi.object().keys({
     privacy: joi.string(),
@@ -63,23 +13,28 @@ export const routeSchema = joi.object().keys({
     expiresAt: joi.any(),
     statuses: joi.array()
   }),
+  handler: handler,
+  file: joi.object().keys({
+    relativeTo: joi.string(),
+    path: joi.string(),
+  }),
+  directory: joi.object().keys({
+    relativeTo: joi.string(),
+    path: joi.string(),
+  }),
+  versions: joi.object(),
   config: joi.object().keys({
     prefix: joi.alternatives().try(
       joi.boolean(),
       joi.string(),
-      joi.object().keys({
-
-      })
+      joi.object().keys({}).unknown()
     ),
+    scope: joi.string(),
     app: joi.object(),
     description: joi.string(),
     notes: joi.string(),
     tags: [joi.string(), joi.array()],
-    handler: joi.alternatives().try(
-      joi.func(),
-      joi.string(),
-      joi.object()
-    ),
+    handler: handler,
     cors: joi.alternatives().try(
       joi.boolean(),
       joi.object().keys({
@@ -96,6 +51,7 @@ export const routeSchema = joi.object().keys({
     files: joi.object().keys({
       relativeTo: joi.string()
     }),
+
     id: joi.string(),
     isInternal: joi.boolean(),
     json: joi.object(),
@@ -109,6 +65,7 @@ export const routeSchema = joi.object().keys({
     timeout: joi.object(),
 
     response: joi.object(),
+
     auth: joi.alternatives().try(
       joi.boolean(),
       joi.string(),
@@ -125,4 +82,62 @@ export const routeSchema = joi.object().keys({
     ),
     bind: joi.object()
   })
+}
+export const routeSchema = joi.object().keys({
+  // method: joi.alternatives().try(
+  //   joi.string(),
+  //   joi.array()
+  // ),
+  // path: joi.string().required(),
+  '*': joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  GET: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  HEAD: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  POST: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  PUT: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  DELETE: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  CONNECT: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  OPTIONS: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  TRACE: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  PATCH: joi.alternatives().try(
+    joi.func(),
+    joi.string(),
+    joi.object().keys(route)
+  ),
+  ...route
 }).or('*', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH')

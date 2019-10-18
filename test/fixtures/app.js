@@ -99,6 +99,13 @@ module.exports = {
           }
         }
       },
+      '/node_modules/@fabrix/fabrix/dist/index.js': {
+        'GET': {
+          file: {
+            path: 'node_modules/@fabrix/fabrix/dist/index.js'
+          }
+        }
+      },
       '/test/foo/tags': {
         'GET': 'TestController.foo',
         config: {
@@ -109,6 +116,32 @@ module.exports = {
         'GET': 'TestController.foo',
         config: {
           prefix: 'customPrefixer.prefix'
+        }
+      },
+
+      '/example/test': {
+        'GET': {
+          versions: {
+            'ExampleController.get': {
+              config: {
+                prefix: 'prefix.one',
+                pre: [ 'ExamplePolicy.get' ]
+              }
+            },
+            'ExampleController.getTwo': {
+              config: {
+                prefix: 'prefix.two',
+                pre: [ 'ExamplePolicy.get' ]
+              }
+            }
+          }
+        },
+        'POST': {
+          handler: 'ExampleController.post',
+          config: {
+            prefix: '/api/v2',
+            pre: [ 'ExamplePolicy.post' ]
+          }
         }
       }
     }
