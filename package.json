@@ -1,6 +1,6 @@
 {
   "name": "@fabrix/spool-router",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Spool - Router for Fabrix",
   "scripts": {
     "release": "standard-version",
