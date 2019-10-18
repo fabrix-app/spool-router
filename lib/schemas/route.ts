@@ -1,4 +1,4 @@
-import * as joi from 'joi'
+import joi from 'joi'
 
 export const routeSchema = joi.object().keys({
   // method: joi.alternatives().try(

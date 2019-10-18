@@ -99,6 +99,13 @@ module.exports = {
           }
         }
       },
+      '/node_modules/@fabrix/fabrix/dist/index.js': {
+        'GET': {
+          file: {
+            path: 'node_modules/@fabrix/fabrix/dist/index.js'
+          }
+        }
+      },
       '/test/foo/tags': {
         'GET': 'TestController.foo',
         config: {

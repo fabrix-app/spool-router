@@ -1,4 +1,4 @@
-import * as joi from 'joi'
+import joi from 'joi'
 import { Utils } from './utils'
 
 import { policySchema } from './schemas/policy'

@@ -420,7 +420,7 @@ export const Utils = {
   /**
    * Build a route collection
    */
-  buildRoutes(app: FabrixApp, routes, toReturn = {}) {
+  buildRoutes(app: FabrixApp, routes, toReturn = {}): Map<any, any> {
     Object.keys(routes).forEach(p => {
       Utils.splitRoute(app, p, routes[p]).forEach(({ path, route }) => {
         toReturn[path] = route
@@ -432,7 +432,7 @@ export const Utils = {
   /**
    * Sort a route collection by object key
    */
-  sortRoutes(routes, order) {
+  sortRoutes(routes, order): Map<any, any> {
     const toReturn = new Map
     const sorted = Object.keys(routes).sort(Utils.createSpecificityComparator({ order: order }))
     sorted.forEach((r, i) => {
@@ -443,27 +443,33 @@ export const Utils = {
   /**
    * Sorts routes based free variables.
    */
-  createSpecificityComparator: function (options) {
-    options = options || {}
+  createSpecificityComparator: function (options: {[key: string]: any} = {}) {
+    // Bit misleading: here we mean that the default (or home) route is '' if not defined
+    const defaultRoute = options.default || ''
+    const defaultRegex = new RegExp('^\\' + defaultRoute + '$', 'g')
+    // This is a wildcard catch all route in Express
+    const catchAllRoute = options.catchAllRoute || '*'
+
     // Ascending order flag, defaults to false
     let asc = false
+
     if (options.order && options.order === 'asc') {
       asc = true
     }
-    // Bit misleading: here we mean that the default route is ''
-    const defaultRoute = options.default || ''
-    // This is a wildcard catch all route in Express
-    const catchAllRoute = options.catchAllRoute || '*'
 
     return function specificityComparator(routeA, routeB) {
       routeA = (routeA || '').toLowerCase()
       routeB = (routeB || '').toLowerCase()
       // If it's the default route, push it all the way
       // over to one of the ends
-      if (
+      if (routeB === catchAllRoute) {
+        return asc ? -1 : 1
+      }
+      else if (
         routeA === defaultRoute
         || routeA === catchAllRoute
       ) {
+        // console.log('yep a', routeA === defaultRoute, routeA === catchAllRoute)
         return asc ? 1 : -1
       }
       // Also push index route down to end, but not past the default
@@ -471,10 +477,18 @@ export const Utils = {
         routeB === defaultRoute
         || routeB === catchAllRoute
       ) {
+        // console.log('yep b', routeB === defaultRoute, routeB === catchAllRoute)
         return asc ? -1 : 1
       }
       // Also push index route down to end, but not past the default
-      else if (/^\/$/.test(routeA) && (routeB !== defaultRoute && routeB !== catchAllRoute)) {
+      else if (
+        (/^\/$/.test(routeA) || defaultRegex.test(routeA))
+        && (
+          routeB !== defaultRoute
+          && routeB !== catchAllRoute
+        )
+      ) {
+        // console.log('yep c', routeB !== defaultRoute, routeB !== catchAllRoute, routeB)
         return asc ? 1 : -1
       }
       // Otherwise, sort based on either depth or free variable priority
@@ -549,15 +563,19 @@ export const Utils = {
    *
    * Weight can only be used to compare paths of the same depth
    */
-  freeVariableWeight: function (sliced) {
-    const colMatches = sliced.match(/(:|\{)/gm)
-    const optionalMatches = sliced.match(/(\?\})/gm)
+  freeVariableWeight: function (slice: string) {
+    const colMatches = slice.match(/(:|\{)/gm)
+    const optionalMatches = slice.match(/(\?\})/gm)
     const col = colMatches ? colMatches.length : 0
     const optional = optionalMatches ? optionalMatches.length : 0
     return col - optional
   },
 
-  optionalParts: function (sliced) {
+  /**
+   *
+   * @param sliced
+   */
+  optionalParts: function (sliced: string[]) {
     let count = 0
     sliced.forEach(slice => {
       if (!/\{.*\?\}$/.test(slice)) {

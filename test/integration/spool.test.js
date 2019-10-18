@@ -15,11 +15,23 @@ describe('Router Spool', () => {
       // assert(_.isFunction(routes[2].handler))
       // assert(_.isPlainObject(routes[3].handler))
 
+      assert(global.app.routes.get('/foo/bar'))
+
+      assert(global.app.routes.get('/node_modules/@fabrix/fabrix/dist/index.js'))
+      assert(global.app.routes.get('/node_modules/@fabrix/fabrix/dist/index.js').GET.file)
+
+      assert(global.app.routes.get('/node_modules'))
+      assert(global.app.routes.get('/node_modules').GET.directory)
+
+      assert(global.app.routes.get('/test/foo'))
       assert(global.app.routes.get('/test/foo1'))
       assert(global.app.routes.get('/test/foo2'))
       assert(global.app.routes.get('/prefix/test/custom/prefix'))
+      assert(global.app.routes.get('/test/{foo}'))
+      assert(global.app.routes.get('/'))
+      assert(global.app.routes.get('/test/foo/tags'))
 
-      assert.equal(global.app.routes.size, 9)
+      assert.equal(global.app.routes.size, 10)
     })
   })
 
