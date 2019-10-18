@@ -1,6 +1,7 @@
 import { FabrixApp } from '@fabrix/fabrix'
 import { FabrixController, FabrixGeneric } from '@fabrix/fabrix/dist/common'
 import { FabrixPolicy } from '@fabrix/fabrix/dist/common'
+import { ConfigValueError } from '@fabrix/fabrix/dist/errors'
 import { get, omit, isString } from 'lodash'
 import { Router } from 'call'
 import { IRoute } from './interfaces/IRoute'
@@ -27,15 +28,35 @@ export const Utils = {
   },
 
   /**
-   * If a route has nested methods that have a seperate prefix, then it needs to be split into
+   * If a route has nested methods that have a separate prefix, then it needs to be split into
    * multiple routes
    */
   splitRoute(app: FabrixApp, path: string, rawRoute: IRoute): {path: string, route: any}[] {
     const methods = ['*', ...Utils.methods]
+    // Map for the Route Methods
     const routeMethods = new Set()
+    // Map for the used prefixes (they need to be unique)
     const usedPrefixes = new Set()
+    // Map for the used scopes (they need to be unique)
+    const usedScopes = new Set()
+
+    // Scenario 1: A wild card has a an object config different then the top level config = method prefix
+    // Scenario 2: Prefix is set on the top level config and not on any methods = all have same prefix
+    // Scenario 3: An Identical Prefix is set on the methods and not on the parent = all have same prefix
+    // Scenario 4: A method has a different prefix then top level config = generate 2+ routes
+    // Scenario 5: There is only one method and it's prefix is different then the top level = method prefix
+    // Scenario 6: There route method is versioned, in which case it should use the version's prefix before going to defaults
+    // Scenario 7: There route wildcard is versioned, in which case it should use the version's prefix before going to defaults
+    const cases = new Set()
+
+    // Clone of the original route
     const orgRoute = Object.assign({ }, rawRoute)
+    // If there is a root level prefix, then set it eg /example: { config: { prefix: '/test' }}
     const parentPrefix = get(orgRoute, 'config.prefix')
+    // If there is a root level auth scope, then set it eg /example: { config: { scope: 'private' }}
+    const parentScope = get(orgRoute, 'config.scope')
+    // const versionPrefixes = (get(orgRoute, 'versions') || [])
+    //   .map(v =>)
 
     // The route must have a config to be set
     orgRoute.config = orgRoute.config || (orgRoute.config = { })
@@ -45,22 +66,33 @@ export const Utils = {
     if (typeof parentPrefix !== 'undefined') {
       usedPrefixes.add(parentPrefix)
     }
+    // Add a scope if given
+    if (typeof parentScope !== 'undefined') {
+      usedScopes.add(parentScope)
+    }
 
-    // Scenario 1: A wild card has a an object config different then the top level config = method prefix
-    // Scenario 2: Prefix is set on the top level config and not on any methods = all have same prefix
-    // Scenario 3: An Identical Prefix is set on the methods and not on the parent = all have same prefix
-    // Scenario 4: A method has a different prefix then top level config = generate 2+ routes
-    // Scenario 5: There is only one method and it's prefix is different then the top level = method prefix
-    const cases = new Set()
-
+    // Cycle through All the available methods
     methods.forEach(method => {
+      // The route has the method
       if (orgRoute.hasOwnProperty(method)) {
+        const methodVersions = new Map(Object.entries(get(rawRoute[method], 'versions') || {}))
+
         const methodPrefix = get(rawRoute[method], 'config.prefix')
         routeMethods.add({[method]: methodPrefix})
+
+        const methodScope = get(rawRoute[method], 'config.scope')
 
         // Add a prefix if given
         if (typeof methodPrefix !== 'undefined') {
           usedPrefixes.add(methodPrefix)
+        }
+        // Add a scope if given
+        if (typeof methodScope !== 'undefined') {
+          usedScopes.add(methodScope)
+        }
+
+        if (method === '*' && methodVersions.size > 0) {
+          cases.add(7)
         }
 
         // Scenario 1
@@ -68,7 +100,11 @@ export const Utils = {
           cases.add(1)
         }
         // Scenario 4
-        if (typeof parentPrefix === 'undefined' && methodPrefix && usedPrefixes.size > 1) {
+        if (
+          typeof parentPrefix === 'undefined'
+          && methodPrefix
+          && usedPrefixes.size > 1
+        ) {
           cases.add(4)
         }
       }
@@ -99,12 +135,15 @@ export const Utils = {
       cases.add(5)
     }
 
+    // Map the scenarios cases
     const scenarios = {
       '1': cases.has(1),
       '2': cases.has(2),
       '3': cases.has(3),
       '4': cases.has(4),
-      '5': cases.has(5)
+      '5': cases.has(5),
+      '6': cases.has(6),
+      '7': cases.has(7),
     }
 
     const type = Object.keys(scenarios).find((key) => scenarios[key])
@@ -233,7 +272,7 @@ export const Utils = {
    */
   getPrefix (app: FabrixApp, route): string {
     if (!route || !(route instanceof Object)) {
-      throw new RangeError('Expected a route object')
+      throw new ConfigValueError('Expected a route object')
     }
 
     const hasPrefix = route.config && route.config.hasOwnProperty('prefix') && route.config.prefix !== false
@@ -249,7 +288,7 @@ export const Utils = {
    */
   getPathFromRoute (app: FabrixApp, path, route): string {
     if (!route || !(route instanceof Object)) {
-      throw new RangeError('Expected a route object')
+      throw new ConfigValueError('Expected a route object')
     }
 
     path = path.replace(/^\//, '')

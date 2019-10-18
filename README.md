@@ -147,7 +147,7 @@ Optionally:
 ```
 The configuration above will take the configuration of another config attribute, in this case: `app.config.customPrefixer.prefix` is set to `/custom/endpoint` so the resulting route prefix will be `/custom/endpoint/example/test`
 
-Finally, you can also provide 2 different prefixes for the same route with different methods.
+Additionally, you can also provide 2 different prefixes for the same route with different methods.
 
 ```js
 {
@@ -173,6 +173,41 @@ Finally, you can also provide 2 different prefixes for the same route with diffe
 ```
 
 The configuration above will produce 2 routes, one for `GET /api/v1/example/test` and one for `POST /api/v2/example/test` respecting their prefixes. This is useful for when one method may still be on an older API than the other or they need to be handled differently.
+
+
+Finally, you can version your route with prefixes
+__under development__
+```js
+{
+  // ...
+  '/example/test': {
+    'GET': {
+       versions: { 
+           'ExampleController.get': {
+              config: {
+                 prefix: 'prefix.one',
+                 pre: [ 'ExamplePolicy.get' ]
+              }
+          },
+          'ExampleController.getTwo': {
+                config: {
+                 prefix: 'prefix.two',
+                 pre: [ 'ExamplePolicy.get' ]
+              }
+           }
+        }
+    },
+    'POST': {
+      handler: 'ExampleController.post',
+      config: {
+        prefix: '/api/v2',
+        pre: [ 'ExamplePolicy.post' ]
+      }
+    }
+  }
+  // ...
+}
+```
 
 ## Tapestries and Policies
 

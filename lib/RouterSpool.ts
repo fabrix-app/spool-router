@@ -1,11 +1,12 @@
 import { SystemSpool } from '@fabrix/fabrix/dist/common/spools/system'
+import { SanityError } from '@fabrix/fabrix/dist/errors'
+
 import { Utils } from './utils'
 import { Validator } from './validator'
 
-
-import { isObject } from 'lodash'
 import * as config from './config/index'
 import * as pkg from '../package.json'
+
 
 /**
  * spool-router
@@ -83,7 +84,7 @@ export class RouterSpool extends SystemSpool {
 
   sanity () {
     if (!(this.app.routes instanceof Map)) {
-      throw new Error('Sanity Failed: app.routes is not a Map!')
+      throw new SanityError('Sanity Failed: app.routes is not a Map!')
     }
   }
 }

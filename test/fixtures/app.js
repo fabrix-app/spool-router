@@ -117,6 +117,32 @@ module.exports = {
         config: {
           prefix: 'customPrefixer.prefix'
         }
+      },
+
+      '/example/test': {
+        'GET': {
+          versions: {
+            'ExampleController.get': {
+              config: {
+                prefix: 'prefix.one',
+                pre: [ 'ExamplePolicy.get' ]
+              }
+            },
+            'ExampleController.getTwo': {
+              config: {
+                prefix: 'prefix.two',
+                pre: [ 'ExamplePolicy.get' ]
+              }
+            }
+          }
+        },
+        'POST': {
+          handler: 'ExampleController.post',
+          config: {
+            prefix: '/api/v2',
+            pre: [ 'ExamplePolicy.post' ]
+          }
+        }
       }
     }
   }

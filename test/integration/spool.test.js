@@ -31,7 +31,8 @@ describe('Router Spool', () => {
       assert(global.app.routes.get('/'))
       assert(global.app.routes.get('/test/foo/tags'))
 
-      assert.equal(global.app.routes.size, 10)
+      // TODO: 12 when the route version handlers are done
+      assert.equal(global.app.routes.size, 11 || 12)
     })
   })
 
